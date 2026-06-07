@@ -25,6 +25,7 @@ const auth = require('./middleware/auth');
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/user', auth, require('./routes/user'));
 app.use('/api/invoices', auth, require('./routes/invoices'));
+app.use('/api/challan', auth, require('./routes/challan'));
 
 if (process.env.NODE_ENV === 'production') {
 

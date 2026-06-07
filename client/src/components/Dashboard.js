@@ -146,6 +146,9 @@ const Dashboard = () => {
            <Link to="/invoices" className="btn btn-outline-primary shadow-sm">
             View All Invoices
           </Link>
+          <Link to="/challans" className="btn btn-outline-primary shadow-sm">
+            View All Challans
+          </Link>
           <Link to="/create-invoice" className="btn btn-primary shadow-sm">
             <Plus size={18} className="me-1" /> New Invoice
           </Link>

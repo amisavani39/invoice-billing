@@ -8,6 +8,9 @@ import Dashboard from './components/Dashboard';
 import InvoiceForm from './components/InvoiceForm';
 import InvoiceList from './components/InvoiceList';
 import InvoiceDetail from './components/InvoiceDetail';
+import ChallanForm from './components/ChallanForm';
+import ChallanList from './components/ChallanList';
+import ChallanDetail from './components/ChallanDetail';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -33,6 +36,39 @@ function App() {
             </>
           } />
           
+          <Route path="/challans" element={
+            <>
+              <SignedIn>
+                <ChallanList />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          } />
+
+          <Route path="/challan/:id" element={
+            <>
+              <SignedIn>
+                <ChallanDetail />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          } />
+
+          <Route path="/create-challan" element={
+            <>
+              <SignedIn>
+                <ChallanForm />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          } />
+
           <Route path="/create-invoice" element={
             <>
               <SignedIn>

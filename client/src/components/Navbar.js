@@ -41,6 +41,18 @@ const Navbar = () => {
               </NavLink>
             </li>
             <li className="nav-item">
+              <NavLink to="/challans" className={({ isActive }) => isActive ? "nav-links active" : "nav-links"}>
+                <FileText size={18} />
+                <span>Challans</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink to="/create-challan" className={({ isActive }) => isActive ? "nav-links active" : "nav-links"}>
+                <PlusCircle size={18} />
+                <span>New Challan</span>
+              </NavLink>
+            </li>
+            <li className="nav-item">
               <NavLink to="/create-invoice" className={({ isActive }) => isActive ? "nav-links active" : "nav-links"}>
                 <PlusCircle size={18} />
                 <span>New Invoice</span>
@@ -88,6 +100,18 @@ const Navbar = () => {
                 <NavLink to="/invoices" className="mobile-nav-link" onClick={closeMobileMenu}>
                   <FileText size={20} />
                   Invoices
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/challans" className="mobile-nav-link" onClick={closeMobileMenu}>
+                  <FileText size={20} />
+                  Challans
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/create-challan" className="mobile-nav-link" onClick={closeMobileMenu}>
+                  <PlusCircle size={20} />
+                  New Challan
                 </NavLink>
               </li>
               <li>
