@@ -3,100 +3,116 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, ArrowLeft, Trash2, Download } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Printer, ArrowLeft, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import './ViewChallan.css';
 
 const ChallanDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isLoaded, getToken } = useAuth();
+  
   const [challan, setChallan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  
   const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-  });
-
-  const handleDownloadPDF = async () => {
-    const element = componentRef.current;
-    if (!element) return;
-
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Challan_${challan.challanNo}.pdf`);
-      setMessage('PDF downloaded successfully');
-    } catch (err) {
-      console.error('Error generating PDF:', err);
-      setMessage('Error generating PDF');
-    }
-  };
-
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(''), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  useEffect(() => {
-    const fetchData = async () => {
+    const fetchChallan = async () => {
+      if (!id) {
+        setError("Missing Challan ID");
+        setLoading(false);
+        return;
+      }
       try {
+        setLoading(true);
         const token = await getToken();
-        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-        const res = await axios.get(`/api/challan`, config);
-        // Since the current API returns an array, find the specific one
-        // Note: Realistically, we should have a /api/challan/:id endpoint
-        const found = res.data.find(c => c._id === id);
-        if (found) {
-          setChallan(found);
-        } else {
-          setError('Challan not found');
-        }
+        const res = await axios.get(`/api/challans/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data) setChallan(res.data);
       } catch (err) {
-        console.error('Error fetching challan', err);
-        setError('Failed to load challan');
+        setError("Failed to load challan data.");
       } finally {
         setLoading(false);
       }
     };
-    if (isLoaded) {
-      fetchData();
-    }
+    if (isLoaded) fetchChallan();
   }, [id, isLoaded, getToken]);
 
-  if (!isLoaded || loading) return <div className="container py-5 text-center"><h3>Loading...</h3></div>;
-  if (error || !challan) return <div className="container py-5 text-center"><h3 className="text-danger">{error || 'Challan not found'}</h3></div>;
+  const handlePrint = useReactToPrint({ contentRef: componentRef });
+  
+  const handleDownloadPDF = async () => {
+    const element = componentRef.current;
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Challan_${challan?.challanNo || 'Detail'}.pdf`);
+      setMessage('PDF downloaded successfully');
+    } catch (err) { setMessage('Error generating PDF'); }
+  };
+
+  // Explicit Date Formatter
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "____________";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "____________";
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = String(date.getFullYear());
+    return `${d}/${m}/${y}`;
+  };
+
+  if (!isLoaded || loading) return <div style={{textAlign: 'center', padding: '50px'}}>Loading Physical Bill...</div>;
+  if (error) return <div style={{textAlign: 'center', padding: '50px', color: 'red'}}>{error}</div>;
+
+  const gstin = challan?.gstin || "";
+  const gstinArray = Array.from({ length: 15 }, (_, i) => gstin[i] || "");
+  const items = challan?.items || [];
+  
+  const totalAmount = items.reduce((sum, item) => {
+      const qty = Number(item.quantity) || 0;
+      const rate = Number(item.rate) || 0;
+      return sum + (qty * rate);
+  }, 0);
+
+  const minRows = 10;
+  const paddingRowsCount = Math.max(0, minRows - items.length);
+
+  const renderQuantity = (qtyStr) => {
+      if (!qtyStr) return "";
+      const str = String(qtyStr);
+      if (str.includes('/')) {
+          const [num, den] = str.split('/');
+          return (
+              <div className="fraction-container">
+                  <span className="fraction-num">{num}</span>
+                  <span className="fraction-den">{den}</span>
+              </div>
+          );
+      }
+      return str;
+  };
 
   return (
     <div className="container py-4">
-      {/* Action Buttons */}
-      <div className="d-flex justify-content-between mb-4 no-print">
+      {/* ACTION BAR (NO PRINT) */}
+      <div className="d-flex justify-content-between mb-4 no-print align-items-center">
         <button onClick={() => navigate('/challans')} className="btn btn-outline-secondary">
           <ArrowLeft size={18} className="me-2" /> Back
         </button>
-        <div className="d-flex gap-2">
-          {message && (
-            <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-danger'} py-2 px-3 mb-0 d-flex align-items-center small`}>
-              {message}
-            </div>
-          )}
+        <div className="d-flex gap-2 align-items-center">
+          {message && <span className="badge bg-success px-3 py-2">{message}</span>}
           <button onClick={handlePrint} className="btn btn-primary">
-            <Printer size={18} className="me-2" /> Print Challan
+            <Printer size={18} className="me-2" /> Print Bill
           </button>
           <button onClick={handleDownloadPDF} className="btn btn-success">
             <Download size={18} className="me-2" /> Download PDF
@@ -104,332 +120,119 @@ const ChallanDetail = () => {
         </div>
       </div>
 
-      {/* Challan Document */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        ref={componentRef}
-        className="challan-print-container"
-      >
-        <div className="challan-border-wrapper">
-          {/* Duplicate Badge */}
-          <div className="duplicate-badge">DUPLICATE</div>
+      {/* PIXEL PERFECT PHYSICAL SLIP (PRINT REF) */}
+      <div ref={componentRef} className="physical-bill-wrapper">
+        <div className="bill-container">
+          <div className="duplicate-stamp">DUPLICATE</div>
 
-          {/* Header */}
-          <div className="challan-header">
-            <h1 className="challan-title">DELIVERY CHALLAN</h1>
-          </div>
+          <h1 className="doc-title">DELIVERY CHALLAN</h1>
+          <div className="title-divider"></div>
 
-          {/* Top Info Section */}
-          <div className="top-info-grid">
-            <div className="from-section">
-              <span className="label">From:</span>
-              <div className="company-info">
-                <h2 className="company-name">{challan.fromDetails?.name}</h2>
-                <p className="company-address">{challan.fromDetails?.address}</p>
-              </div>
+          <div className="header-grid">
+            <div className="header-left">
+              <div className="from-label">From: SHREE SHYAM FAB</div>
+              <p className="address-line">Plot No.-2048/8B, Road No.-03,</p>
+              <p className="address-line">Diamond Ind., Chachhi M.</p>
+              <p className="address-line">Surat, Gujarat</p>
             </div>
-            <div className="meta-info">
+            <div className="header-right">
               <div className="meta-row">
-                <span className="label">P.O. No.</span>
-                <span className="value border-bottom">{challan.poNo || '........................'}</span>
+                <span className="meta-label">P.O No. :</span>
+                <span className="meta-value">{challan?.poNo || "____________"}</span>
               </div>
               <div className="meta-row">
-                <span className="label">Ch. No.</span>
-                <span className="value border-bottom">{challan.challanNo}</span>
+                <span className="meta-label">Ch. No. :</span>
+                <span className="meta-value">{challan?.chNo || "____________"}</span>
               </div>
               <div className="meta-row">
-                <span className="label">Date:</span>
-                <span className="value border-bottom">{new Date(challan.date).toLocaleDateString('en-IN')}</span>
+                <span className="meta-label">Date :</span>
+                <span className="meta-value">{formatDate(challan?.date)}</span>
               </div>
             </div>
           </div>
 
-          {/* Customer Section */}
-          <div className="customer-section">
-            <div className="customer-row">
-              <span className="label">To M/s.</span>
-              <span className="value border-bottom flex-grow-1">{challan.toDetails?.clientName}</span>
-            </div>
-            <div className="customer-row mt-2">
-              <span className="label">G.S.T.I.N.</span>
-              <div className="gstin-boxes">
-                {Array.from({ length: 15 }).map((_, index) => {
-                  const char = (challan.toDetails?.gstin || '')[index];
-                  return (
-                    <span key={index} className="gstin-box">
-                      {char || ''}
-                    </span>
-                  );
-                })}
-              </div>
+          <div className="customer-row">
+            <span className="customer-label">To M/s :</span>
+            <span className="customer-value">
+              {challan?.toDetails?.companyName || "________________________"} 
+              {challan?.toDetails?.locationBranch ? ` (${challan.toDetails.locationBranch})` : " (Saroli)"}
+            </span>
+          </div>
+
+          <div className="gstin-strip">
+            <span className="gstin-label">GSTIN:</span>
+            <div className="gstin-boxes">
+              {gstinArray.map((char, index) => (
+                <div key={index} className="gstin-box">{char}</div>
+              ))}
             </div>
           </div>
 
-          {/* Center Message */}
-          <div className="center-message">
+          <div className="declaration">
             Please receive the undermentioned goods in good order & condition
           </div>
 
-          {/* Item Table */}
-          <table className="challan-table">
+          <table className="grid-table">
             <thead>
               <tr>
-                <th width="50">Sr.</th>
-                <th>Particulars</th>
-                <th width="100">Quantity</th>
-                <th width="100">Rate</th>
-                <th width="80">Per</th>
+                <th className="col-sr">SR.</th>
+                <th className="col-part">PARTICULARS</th>
+                <th className="col-qty">QUANTITY</th>
+                <th className="col-rate">RATE</th>
+                <th className="col-per">PER</th>
+                <th className="col-amt">AMOUNT</th>
               </tr>
             </thead>
             <tbody>
-              {challan.items.map((item, index) => (
+              {items.map((item, index) => (
                 <tr key={index}>
-                  <td className="text-center">{index + 1}</td>
-                  <td>{item.particulars}</td>
-                  <td className="text-center">{item.quantity}</td>
-                  <td className="text-center">{item.rate}</td>
-                  <td className="text-center">{item.per}</td>
+                  <td className="col-sr">{index + 1}</td>
+                  <td className="col-part">{item.particulars}</td>
+                  <td className="col-qty">{renderQuantity(item.quantity)}</td>
+                  <td className="col-rate">{item.rate ? Number(item.rate).toFixed(2) : ""}</td>
+                  <td className="col-per">{item.per}</td>
+                  <td className="col-amt">
+                    {item.rate && item.quantity ? (Number(item.quantity) * Number(item.rate)).toFixed(2) : ""}
+                  </td>
                 </tr>
               ))}
-              {/* Blank Rows to fill space like a real book */}
-              {[...Array(Math.max(1, 10 - challan.items.length))].map((_, i) => (
-                <tr key={`blank-${i}`} className="blank-row">
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
+              
+              {/* Empty Row Padding */}
+              {Array.from({ length: paddingRowsCount }).map((_, i) => (
+                <tr key={`padding-${i}`}>
+                  <td className="col-sr"></td>
+                  <td className="col-part"></td>
+                  <td className="col-qty"></td>
+                  <td className="col-rate"></td>
+                  <td className="col-per"></td>
+                  <td className="col-amt"></td>
                 </tr>
               ))}
             </tbody>
           </table>
+          
+          <div className="total-wrapper">
+            <div className="total-label">GRAND TOTAL</div>
+            <div className="total-value">{totalAmount > 0 ? totalAmount.toFixed(2) : ""}</div>
+          </div>
 
-          {/* Footer */}
-          <div className="challan-footer">
-            <div className="terms-section">
-              <p className="terms-text">
-                Note: Goods once sold will not be taken back. Our Responsibility ceases once the goods leave our premises.
-              </p>
-            </div>
-            
-            <div className="signature-grid">
-              <div className="sig-box">
-                <div className="sig-line">Received By</div>
-              </div>
-              <div className="sig-box">
-                <div className="sig-line">Prepared By</div>
-              </div>
-              <div className="sig-box text-end">
-                <div className="for-company">For, {challan.fromDetails?.name}</div>
-              </div>
-            </div>
+          <div className="disclaimer-banner">
+            Note: Goods once sold will not be taken back. Our Responsibility ceases once the goods leave our premises.
+          </div>
+
+          <div className="signature-blocks">
+            <div className="sig-text">Received by _________________</div>
+            <div className="sig-text">Prepared by _________________</div>
           </div>
         </div>
-
-        <style>
-          {`
-            .challan-print-container {
-              width: 210mm;
-              min-height: 297mm;
-              margin: 0 auto;
-              background: white;
-              padding: 10mm;
-              font-family: 'Arial', sans-serif;
-              color: #333;
-            }
-
-            .challan-border-wrapper {
-              border: 3px double #ffb6c1; /* Pink Border */
-              padding: 15mm;
-              height: 100%;
-              position: relative;
-              background-color: #fff;
-            }
-
-            .duplicate-badge {
-              position: absolute;
-              top: 10mm;
-              right: 10mm;
-              border: 1px solid #ffb6c1;
-              padding: 2px 8px;
-              font-size: 10pt;
-              font-weight: bold;
-              color: #ffb6c1;
-            }
-
-            .challan-header {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-
-            .challan-title {
-              font-size: 22pt;
-              font-weight: bold;
-              color: #ffb6c1;
-              text-decoration: underline;
-              margin: 0;
-            }
-
-            .top-info-grid {
-              display: grid;
-              grid-template-columns: 1.5fr 1fr;
-              gap: 20px;
-              margin-bottom: 20px;
-            }
-
-            .label {
-              font-weight: bold;
-              font-size: 11pt;
-              margin-right: 5px;
-            }
-
-            .company-name {
-              font-size: 18pt;
-              font-weight: bold;
-              margin: 5px 0;
-              color: #000;
-            }
-
-            .company-address {
-              font-size: 10pt;
-              margin: 0;
-              line-height: 1.4;
-            }
-
-            .meta-row {
-              display: flex;
-              align-items: baseline;
-              margin-bottom: 8px;
-            }
-
-            .value {
-              flex-grow: 1;
-              padding-left: 5px;
-            }
-
-            .border-bottom {
-              border-bottom: 1px dotted #333;
-            }
-
-            .customer-section {
-              margin-bottom: 15px;
-            }
-
-            .customer-row {
-              display: flex;
-              align-items: center;
-            }
-
-            .gstin-boxes {
-              display: flex;
-              gap: 0;
-            }
-
-            .gstin-box {
-              width: 22px;
-              height: 25px;
-              border: 1px solid #333;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-weight: bold;
-              font-size: 11pt;
-            }
-
-            .center-message {
-              text-align: center;
-              font-style: italic;
-              font-size: 10pt;
-              margin: 15px 0;
-              padding: 5px;
-              border-top: 1px solid #ffb6c1;
-              border-bottom: 1px solid #ffb6c1;
-            }
-
-            .challan-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 20px;
-            }
-
-            .challan-table th {
-              background-color: #fff0f5; /* Very light pink */
-              border: 1px solid #ffb6c1;
-              padding: 8px;
-              text-align: center;
-              font-size: 11pt;
-            }
-
-            .challan-table td {
-              border-left: 1px solid #ffb6c1;
-              border-right: 1px solid #ffb6c1;
-              padding: 8px;
-              font-size: 11pt;
-              height: 35px;
-            }
-
-            .challan-table tr:last-child td {
-              border-bottom: 1px solid #ffb6c1;
-            }
-
-            .blank-row td {
-              height: 35px;
-            }
-
-            .challan-footer {
-              margin-top: 30px;
-            }
-
-            .terms-text {
-              font-size: 9pt;
-              margin-bottom: 40px;
-              color: #555;
-            }
-
-            .signature-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr 1.5fr;
-              gap: 20px;
-              align-items: flex-end;
-            }
-
-            .sig-line {
-              border-top: 1px solid #333;
-              display: inline-block;
-              padding-top: 5px;
-              width: 100%;
-              text-align: center;
-              font-weight: bold;
-              font-size: 10pt;
-            }
-
-            .for-company {
-              font-weight: bold;
-              margin-bottom: 10px;
-              font-size: 10pt;
-            }
-
-            @media print {
-              @page {
-                size: A4;
-                margin: 0;
-              }
-              .no-print { display: none !important; }
-              body { margin: 0; padding: 0; }
-              .challan-print-container {
-                width: 100%;
-                height: 100%;
-                padding: 10mm;
-                margin: 0;
-              }
-              .challan-border-wrapper {
-                border-width: 2px;
-              }
-            }
-          `}
-        </style>
-      </motion.div>
+      </div>
+      
+      {/* Hide the top navbar/buttons during print using standard CSS */}
+      <style>{`
+        @media print {
+          .no-print, .navbar, .sidebar { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 };

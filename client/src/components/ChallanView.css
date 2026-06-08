@@ -1,0 +1,325 @@
+/* 
+  ChallanView.css
+  Pixel-perfect replication of a traditional pink delivery challan.
+  Optimized for A4 printing (794px width).
+*/
+
+:root {
+  --pink-primary: #c56b8f;
+  --text-black: #000000;
+  --text-navy: #0b2265;
+  --bg-white: #ffffff;
+}
+
+/* Document Container */
+.challan-page-wrapper {
+  background-color: #f0f0f0; /* Grey background for screen preview */
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.challan-container {
+  width: 100%;
+  max-width: 794px; /* A4 width in px at 96dpi */
+  min-height: 1123px; /* A4 height in px at 96dpi */
+  background-color: var(--bg-white);
+  padding: 40px;
+  border: 2px solid var(--pink-primary);
+  position: relative;
+  box-sizing: border-box;
+  margin: 0 auto;
+  font-family: 'Times New Roman', serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Section */
+.challan-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.main-title {
+  font-size: 32px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--pink-primary);
+  margin: 0 0 5px 0;
+  letter-spacing: 2px;
+}
+
+.double-rule {
+  border-top: 1px solid var(--pink-primary);
+  border-bottom: 1px solid var(--pink-primary);
+  height: 2px;
+  width: 100%;
+}
+
+/* Duplicate Badge */
+.duplicate-badge {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  border: 1px solid var(--pink-primary);
+  color: var(--pink-primary);
+  font-weight: bold;
+  padding: 5px 14px;
+  font-size: 14px;
+  text-transform: uppercase;
+  background-color: transparent;
+}
+
+/* Information Blocks */
+.info-block {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.sender-info {
+  flex: 1;
+}
+
+.label-text {
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+.company-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--text-black);
+}
+
+.address-details {
+  font-style: normal;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-black);
+}
+
+.meta-info {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: baseline;
+}
+
+.meta-label {
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--text-black);
+  width: 80px;
+}
+
+.meta-value {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--text-navy);
+  border-bottom: 1px dotted var(--text-black);
+  flex: 1;
+  padding-left: 10px;
+}
+
+/* Consignee Section */
+.consignee-section {
+  margin-bottom: 20px;
+}
+
+.to-line {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 15px;
+}
+
+.client-underline {
+  flex: 1;
+  border-bottom: 1px solid var(--text-black);
+  margin-left: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  padding-bottom: 2px;
+}
+
+.gstin-line {
+  display: flex;
+  align-items: center;
+}
+
+.gstin-boxes {
+  display: inline-flex;
+  margin-left: 15px;
+}
+
+.gstin-box {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--pink-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: -1px; /* Overlap borders */
+}
+
+/* Receipt Notice */
+.receipt-notice {
+  width: 100%;
+  border: 1px solid var(--pink-primary);
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-black);
+  margin-bottom: 20px;
+}
+
+/* Ledger Table */
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--pink-primary);
+  margin-bottom: 0;
+}
+
+.ledger-table th {
+  background-color: var(--pink-primary);
+  color: #ffffff;
+  font-weight: bold;
+  padding: 10px 5px;
+  border: 1px solid var(--pink-primary);
+  font-size: 14px;
+  text-align: center;
+}
+
+.ledger-table td {
+  border-left: 1px solid var(--pink-primary);
+  border-right: 1px solid var(--pink-primary);
+  padding: 8px 10px;
+  height: 35px; /* Consistent row height */
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.ledger-table tbody tr {
+  border-bottom: 1px solid var(--pink-primary);
+}
+
+.col-sr { width: 6%; text-align: center; }
+.col-particulars { width: 48%; }
+.col-qty { width: 12%; text-align: center; }
+.col-rate { width: 12%; text-align: center; }
+.col-per { width: 10%; text-align: center; }
+.col-amount { width: 12%; text-align: right; }
+
+/* Grand Total Section */
+.grand-total-container {
+  display: flex;
+  border-left: 1px solid var(--pink-primary);
+  border-right: 1px solid var(--pink-primary);
+  border-bottom: 1px solid var(--pink-primary);
+}
+
+.total-label-area {
+  width: 88%;
+  text-align: right;
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 16px;
+  border-right: 1px solid var(--pink-primary);
+}
+
+.total-amount-area {
+  width: 12%;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: right;
+  color: var(--text-black);
+}
+
+/* Disclaimer */
+.challan-footer {
+  margin-top: 20px;
+  flex: 1; /* Pushes signature to bottom */
+  display: flex;
+  flex-direction: column;
+}
+
+.disclaimer-text {
+  font-size: 11px;
+  color: var(--text-black);
+  line-height: 1.2;
+  margin-bottom: 40px;
+}
+
+/* Signature Section */
+.signature-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  padding-bottom: 10px;
+}
+
+.sig-block {
+  width: 200px;
+  text-align: center;
+}
+
+.sig-line {
+  border-bottom: 1px solid var(--text-black);
+  margin-bottom: 5px;
+  width: 100%;
+}
+
+.sig-label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Print Optimization */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    background-color: var(--bg-white);
+  }
+
+  .challan-page-wrapper {
+    padding: 0;
+    background-color: transparent;
+  }
+
+  .challan-container {
+    border: 2px solid var(--pink-primary) !important;
+    box-shadow: none;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ledger-table th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: var(--pink-primary) !important;
+    color: #ffffff !important;
+  }
+}

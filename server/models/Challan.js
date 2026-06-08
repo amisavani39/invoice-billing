@@ -5,10 +5,27 @@ const ChallanSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  challanType: {
+    type: String,
+    enum: ['ORIGINAL', 'DUPLICATE', 'TRIPLICATE', 'OFFICE COPY'],
+    default: 'ORIGINAL'
+  },
+  fromDetails: {
+    companyName: { type: String, required: true },
+    plotNo: { type: String },
+    roadNo: { type: String },
+    area: { type: String }, // Diamond Ind
+    cityRegion: { type: String }, // Chachhi M
+  },
+  toDetails: {
+    companyName: { type: String, required: true },
+    locationBranch: { type: String },
+    mobileNumber: { type: String },
+  },
   poNo: {
     type: String,
   },
-  challanNo: {
+  chNo: {
     type: String,
     required: true,
   },
@@ -16,22 +33,26 @@ const ChallanSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  fromDetails: {
-    name: { type: String },
-    address: { type: String },
-  },
-  toDetails: {
-    clientName: { type: String, required: true },
-    gstin: { type: String },
+  gstin: {
+    type: String,
   },
   items: [
     {
       particulars: { type: String, required: true },
       quantity: { type: Number, required: true },
-      rate: { type: Number, required: true },
+      quantityUnit: { type: String, default: 'pcs' },
+      rate: { type: Number },
       per: { type: String },
     },
   ],
+  preparedBySignature: {
+    type: String,
+    default: ''
+  },
+  receivedBySignature: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now,

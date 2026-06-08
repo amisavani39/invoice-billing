@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Plus, Calendar, FileSpreadsheet } from 'lucide-react';
+import { Search, Eye, Plus, Calendar, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
@@ -56,6 +56,23 @@ const InvoiceList = () => {
       fetchInvoices(search, dateFilter, page);
     }
   }, [isLoaded, fetchInvoices, page, search, dateFilter]);
+
+  const deleteInvoice = async (id) => {
+    if (window.confirm('Are you sure you want to delete this invoice?')) {
+      try {
+        const token = await getToken();
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        await axios.delete(`/api/invoices/${id}`, config);
+        
+        // Update local state
+        setInvoices(invoices.filter(inv => inv._id !== id));
+        // You can add a message state here too if needed
+      } catch (err) {
+        console.error('Error deleting invoice:', err);
+        alert('Failed to delete invoice');
+      }
+    }
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -240,6 +257,13 @@ const InvoiceList = () => {
                           <Link to={`/invoice/${invoice._id}`} className="btn btn-outline-primary btn-sm" title="View Detail">
                             <Eye size={16} />
                           </Link>
+                          <button 
+                            onClick={() => deleteInvoice(invoice._id)} 
+                            className="btn btn-outline-danger btn-sm" 
+                            title="Delete Invoice"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>

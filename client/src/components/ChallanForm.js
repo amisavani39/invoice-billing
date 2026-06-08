@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
@@ -6,18 +6,26 @@ import { useAuth } from "@clerk/clerk-react";
 import { motion } from "framer-motion";
 
 const initialFormState = {
+  challanType: "ORIGINAL",
   poNo: "",
-  challanNo: "",
+  chNo: "",
   date: new Date().toISOString().split("T")[0],
   fromDetails: {
-    name: "SHREE SHYAM FAB",
-    address: "ROAD - 3, PLOt NO - 2048 2TH FLOOR DIAMOND INDUSTRIAL PARK, SACHIN GIDC, SURAT, GUJARAT, INDIA - 394230",
+    companyName: "SHREE SHYAM FAB",
+    plotNo: "2048",
+    roadNo: "3",
+    area: "DIAMOND INDUSTRIAL PARK",
+    cityRegion: "SACHIN GIDC, SURAT",
   },
   toDetails: {
-    clientName: "",
-    gstin: "",
+    companyName: "",
+    locationBranch: "",
+    mobileNumber: "",
   },
-  items: [{ particulars: "", quantity: 0, rate: 0, per: "PCS" }],
+  gstin: "",
+  items: [{ particulars: "", quantity: 0, rate: 0, per: "pcs" }],
+  preparedBySignature: "",
+  receivedBySignature: ""
 };
 
 const ChallanForm = () => {
@@ -28,30 +36,6 @@ const ChallanForm = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const token = await getToken();
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get("/api/user/profile", config);
-      if (res.data && res.data.companyDetails) {
-        const companyDetails = {
-          name: res.data.companyDetails.name || initialFormState.fromDetails.name,
-          address: res.data.companyDetails.address || initialFormState.fromDetails.address,
-        };
-        setFormData((prev) => ({
-          ...prev,
-          fromDetails: companyDetails,
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching profile", err);
-    }
-  }, [getToken]);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -84,7 +68,7 @@ const ChallanForm = () => {
   const addItem = () => {
     setFormData({
       ...formData,
-      items: [...formData.items, { particulars: "", quantity: 0, rate: 0, per: "PCS" }],
+      items: [...formData.items, { particulars: "", quantity: 0, rate: 0, per: "pcs" }],
     });
   };
 
@@ -102,23 +86,17 @@ const ChallanForm = () => {
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      await axios.post("/api/challan", formData, config);
+      await axios.post("/api/challans", formData, config);
 
       setSuccessMessage("Challan saved successfully");
       
-      // Reset form fields
-      setFormData({
-        ...initialFormState,
-        fromDetails: formData.fromDetails // Keep the sender details as they usually don't change
-      });
+      setFormData(initialFormState);
 
-      // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
-      }, 3000);
+        navigate("/challans");
+      }, 2000);
 
-      // Explicitly navigate to the same page to ensure the view is fresh
-      navigate("/create-challan");
     } catch (err) {
       console.error("Error saving challan:", err);
       setError(err.response?.data?.msg || "Error saving challan. Please try again.");
@@ -140,37 +118,26 @@ const ChallanForm = () => {
       <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow-sm border">
         {/* Header Details */}
         <div className="row mb-4">
-          <div className="col-md-4 mb-3">
+          <div className="col-md-3 mb-3">
+            <label className="form-label fw-bold">Challan Type</label>
+            <select name="challanType" className="form-select" value={formData.challanType} onChange={handleInputChange}>
+                <option value="ORIGINAL">ORIGINAL</option>
+                <option value="DUPLICATE">DUPLICATE</option>
+                <option value="TRIPLICATE">TRIPLICATE</option>
+                <option value="OFFICE COPY">OFFICE COPY</option>
+            </select>
+          </div>
+          <div className="col-md-3 mb-3">
             <label className="form-label fw-bold">P.O. No.</label>
-            <input
-              type="text"
-              name="poNo"
-              className="form-control"
-              value={formData.poNo}
-              onChange={handleInputChange}
-            />
+            <input type="text" name="poNo" className="form-control" value={formData.poNo} onChange={handleInputChange} />
           </div>
-          <div className="col-md-4 mb-3">
-            <label className="form-label fw-bold">Challan No.</label>
-            <input
-              type="text"
-              name="challanNo"
-              className="form-control"
-              value={formData.challanNo}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="col-md-3 mb-3">
+            <label className="form-label fw-bold">Challan No. (chNo)</label>
+            <input type="text" name="chNo" className="form-control" value={formData.chNo} onChange={handleInputChange} required />
           </div>
-          <div className="col-md-4 mb-3">
+          <div className="col-md-3 mb-3">
             <label className="form-label fw-bold">Date</label>
-            <input
-              type="date"
-              name="date"
-              className="form-control"
-              value={formData.date}
-              onChange={handleInputChange}
-              required
-            />
+            <input type="date" name="date" className="form-control" value={formData.date} onChange={handleInputChange} required />
           </div>
         </div>
 
@@ -180,51 +147,44 @@ const ChallanForm = () => {
             <h5 className="text-primary border-bottom pb-2">From (Sender)</h5>
             <div className="mb-2">
               <label className="form-label small mb-1">Company Name</label>
-              <input
-                type="text"
-                name="fromDetails.name"
-                className="form-control"
-                value={formData.fromDetails.name}
-                onChange={handleInputChange}
-                required
-              />
+              <input type="text" name="fromDetails.companyName" className="form-control" value={formData.fromDetails.companyName} onChange={handleInputChange} required />
+            </div>
+            <div className="row">
+                <div className="col-md-6 mb-2">
+                    <label className="form-label small mb-1">Plot No</label>
+                    <input type="text" name="fromDetails.plotNo" className="form-control" value={formData.fromDetails.plotNo} onChange={handleInputChange} />
+                </div>
+                <div className="col-md-6 mb-2">
+                    <label className="form-label small mb-1">Road No</label>
+                    <input type="text" name="fromDetails.roadNo" className="form-control" value={formData.fromDetails.roadNo} onChange={handleInputChange} />
+                </div>
             </div>
             <div className="mb-2">
-              <label className="form-label small mb-1">Address</label>
-              <textarea
-                name="fromDetails.address"
-                className="form-control"
-                rows="2"
-                value={formData.fromDetails.address}
-                onChange={handleInputChange}
-                required
-              />
+              <label className="form-label small mb-1">Area (Diamond Ind)</label>
+              <input type="text" name="fromDetails.area" className="form-control" value={formData.fromDetails.area} onChange={handleInputChange} />
+            </div>
+            <div className="mb-2">
+              <label className="form-label small mb-1">City/Region (Chachhi M)</label>
+              <input type="text" name="fromDetails.cityRegion" className="form-control" value={formData.fromDetails.cityRegion} onChange={handleInputChange} />
             </div>
           </div>
           <div className="col-md-6 mb-3">
             <h5 className="text-primary border-bottom pb-2">To (Recipient)</h5>
             <div className="mb-2">
-              <label className="form-label small mb-1">Client Name</label>
-              <input
-                type="text"
-                name="toDetails.clientName"
-                className="form-control"
-                value={formData.toDetails.clientName}
-                onChange={handleInputChange}
-                required
-              />
+              <label className="form-label small mb-1">Client Company Name</label>
+              <input type="text" name="toDetails.companyName" className="form-control" value={formData.toDetails.companyName} onChange={handleInputChange} required />
             </div>
             <div className="mb-2">
-              <label className="form-label small mb-1">GSTIN</label>
-              <input
-                type="text"
-                name="toDetails.gstin"
-                className="form-control"
-                placeholder="15-character GSTIN"
-                maxLength="15"
-                value={formData.toDetails.gstin}
-                onChange={handleInputChange}
-              />
+              <label className="form-label small mb-1">Location / Branch</label>
+              <input type="text" name="toDetails.locationBranch" className="form-control" value={formData.toDetails.locationBranch} onChange={handleInputChange} />
+            </div>
+            <div className="mb-2">
+                <label className="form-label small mb-1">GSTIN</label>
+                <input type="text" name="gstin" className="form-control" placeholder="15-character GSTIN" maxLength="15" value={formData.gstin} onChange={handleInputChange} />
+            </div>
+            <div className="mb-2">
+                <label className="form-label small mb-1">Mobile Number</label>
+                <input type="text" name="toDetails.mobileNumber" className="form-control" placeholder="10-digit mobile number" value={formData.toDetails.mobileNumber} onChange={handleInputChange} />
             </div>
           </div>
         </div>
@@ -238,7 +198,7 @@ const ChallanForm = () => {
                 <tr>
                   <th width="50">Sr</th>
                   <th>Particulars</th>
-                  <th width="120">Quantity</th>
+                  <th width="120">Qty</th>
                   <th width="120">Rate</th>
                   <th width="100">Per</th>
                   <th width="50"></th>
@@ -248,84 +208,37 @@ const ChallanForm = () => {
                 {formData.items.map((item, index) => (
                   <tr key={index}>
                     <td className="text-center">{index + 1}</td>
-                    <td>
-                      <input
-                        type="text"
-                        name="particulars"
-                        className="form-control border-0"
-                        value={item.particulars}
-                        onChange={(e) => handleItemChange(index, e)}
-                        required
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        name="quantity"
-                        className="form-control border-0 text-center"
-                        value={item.quantity}
-                        onChange={(e) => handleItemChange(index, e)}
-                        required
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        name="rate"
-                        className="form-control border-0 text-end"
-                        value={item.rate}
-                        onChange={(e) => handleItemChange(index, e)}
-                        required
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="per"
-                        className="form-control border-0 text-center"
-                        value={item.per}
-                        onChange={(e) => handleItemChange(index, e)}
-                        placeholder="e.g. PCS, KGS"
-                      />
-                    </td>
+                    <td><input type="text" name="particulars" className="form-control border-0" value={item.particulars} onChange={(e) => handleItemChange(index, e)} required /></td>
+                    <td><input type="number" name="quantity" className="form-control border-0 text-center" value={item.quantity} onChange={(e) => handleItemChange(index, e)} required /></td>
+                    <td><input type="number" name="rate" className="form-control border-0 text-end" value={item.rate} onChange={(e) => handleItemChange(index, e)} /></td>
+                    <td><input type="text" name="per" className="form-control border-0 text-center" value={item.per} onChange={(e) => handleItemChange(index, e)} /></td>
                     <td className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        className="btn btn-link text-danger p-0"
-                        disabled={formData.items.length === 1}
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <button type="button" onClick={() => removeItem(index)} className="btn btn-link text-danger p-0" disabled={formData.items.length === 1}><Trash2 size={18} /></button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <button
-            type="button"
-            onClick={addItem}
-            className="btn btn-sm btn-outline-primary"
-          >
-            <Plus size={16} className="me-1" /> Add Item
-          </button>
+          <button type="button" onClick={addItem} className="btn btn-sm btn-outline-primary"><Plus size={16} className="me-1" /> Add Item</button>
+        </div>
+
+        <div className="row mb-4">
+            <div className="col-md-6 mb-3">
+                <label className="form-label fw-bold">Prepared By Signature</label>
+                <input type="text" name="preparedBySignature" className="form-control" value={formData.preparedBySignature} onChange={handleInputChange} />
+            </div>
+            <div className="col-md-6 mb-3">
+                <label className="form-label fw-bold">Received By Signature</label>
+                <input type="text" name="receivedBySignature" className="form-control" value={formData.receivedBySignature} onChange={handleInputChange} />
+            </div>
         </div>
 
         <div className="mt-4 border-top pt-4 text-end">
           {error && <div className="alert alert-danger py-2 px-3 small d-inline-block me-3">{error}</div>}
           {successMessage && <div className="alert alert-success py-2 px-3 small d-inline-block me-3">{successMessage}</div>}
           <button type="submit" className="btn btn-primary btn-lg px-5" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={20} className="me-2" /> Save Challan
-              </>
-            )}
+            {loading ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Saving...</> : <><Save size={20} className="me-2" /> Save Challan</>}
           </button>
         </div>
       </form>

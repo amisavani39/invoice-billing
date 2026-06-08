@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Calendar, Eye, ArrowLeft, FileSpreadsheet } from 'lucide-react';
+import { Search, Plus, Calendar, Eye, ArrowLeft, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
@@ -11,29 +11,56 @@ const ChallanList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const { isLoaded, getToken } = useAuth();
   const navigate = useNavigate();
 
   const fetchChallans = useCallback(async () => {
     try {
       setLoading(true);
+      setError('');
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      const res = await axios.get('/api/challan', config);
+      console.log('Fetching challans from /api/challans...');
+      const res = await axios.get('/api/challans', config);
+      console.log('Challan fetch response:', res.data);
       
       if (Array.isArray(res.data)) {
         setChallans(res.data);
+      } else if (res.data && Array.isArray(res.data.challans)) {
+        setChallans(res.data.challans);
       } else {
+        console.warn('Unexpected data format for challans:', res.data);
         setChallans([]);
       }
     } catch (err) {
-      console.error('Error fetching challans', err);
+      console.error('Error fetching challans:', err);
+      setError('Failed to fetch challans. Please try again.');
       setChallans([]);
     } finally {
       setLoading(false);
     }
   }, [getToken]);
+
+  const deleteChallan = async (id) => {
+    if (window.confirm('Are you sure you want to delete this challan?')) {
+      try {
+        const token = await getToken();
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+        await axios.delete(`/api/challans/${id}`, config);
+        
+        // Update local state
+        setChallans(challans.filter(c => c._id !== id));
+        setMessage('Challan deleted successfully');
+        setTimeout(() => setMessage(''), 3000);
+      } catch (err) {
+        console.error('Error deleting challan:', err);
+        alert('Failed to delete challan');
+      }
+    }
+  };
 
   useEffect(() => {
     if (isLoaded) {
@@ -43,10 +70,10 @@ const ChallanList = () => {
 
   const filteredChallans = challans.filter(challan => {
     const matchesSearch = 
-      (challan.challanNo?.toLowerCase().includes(search.toLowerCase())) ||
-      (challan.toDetails?.clientName?.toLowerCase().includes(search.toLowerCase()));
+      (challan.chNo?.toLowerCase().includes(search.toLowerCase())) ||
+      (challan.toDetails?.companyName?.toLowerCase().includes(search.toLowerCase()));
     
-    const matchesDate = !dateFilter || challan.date?.split('T')[0] === dateFilter;
+    const matchesDate = !dateFilter || (challan.date && challan.date.split('T')[0] === dateFilter);
 
     return matchesSearch && matchesDate;
   });
@@ -60,13 +87,14 @@ const ChallanList = () => {
         
         items.forEach(item => {
           dataToExport.push({
-            'Challan No': challan.challanNo,
+            'Challan No': challan.chNo,
             'Date': new Date(challan.date).toLocaleDateString('en-IN'),
             'P.O. No': challan.poNo || 'N/A',
-            'Client Name': challan.toDetails?.clientName,
-            'Client GSTIN': challan.toDetails?.gstin || 'N/A',
-            'From Name': challan.fromDetails?.name || 'N/A',
-            'From Address': challan.fromDetails?.address || 'N/A',
+            'Client Name': challan.toDetails?.companyName,
+            'Client GSTIN': challan.gstin || 'N/A',
+            'Client Mobile': challan.toDetails?.mobileNumber || 'N/A',
+            'From Name': challan.fromDetails?.companyName || 'N/A',
+            'From Plot No': challan.fromDetails?.plotNo || 'N/A',
             
             // Item Details
             'Item Description': item.particulars || 'N/A',
@@ -101,7 +129,17 @@ const ChallanList = () => {
           <h1 className="h3 mb-0 text-gray-800">Delivery Challans</h1>
           <p className="text-muted small">Manage and track your delivery challans ({filteredChallans.length} total)</p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 align-items-center">
+          {message && (
+            <div className="alert alert-success py-2 px-3 mb-0 small">
+              {message}
+            </div>
+          )}
+          {error && (
+            <div className="alert alert-danger py-2 px-3 mb-0 small">
+              {error}
+            </div>
+          )}
           <button onClick={exportToExcel} className="btn btn-outline-success d-flex align-items-center">
             <FileSpreadsheet size={18} className="me-2" /> Export Excel
           </button>
@@ -170,18 +208,25 @@ const ChallanList = () => {
                 <>
                   {filteredChallans.map(challan => (
                     <tr key={challan._id}>
-                      <td className="px-4 fw-bold text-primary">{challan.challanNo}</td>
+                      <td className="px-4 fw-bold text-primary">{challan.chNo}</td>
                       <td>
-                        <div className="fw-bold">{challan.toDetails?.clientName || 'N/A'}</div>
+                        <div className="fw-bold">{challan.toDetails?.companyName || 'N/A'}</div>
                       </td>
                       <td>{new Date(challan.date).toLocaleDateString('en-IN')}</td>
-                      <td><span className="badge bg-light text-dark border">{challan.toDetails?.gstin || 'N/A'}</span></td>
+                      <td><span className="badge bg-light text-dark border">{challan.gstin || 'N/A'}</span></td>
                       <td className="text-end fw-bold">{challan.items?.length || 0}</td>
                       <td className="px-4 text-center">
                         <div className="btn-group">
                           <Link to={`/challan/${challan._id}`} className="btn btn-outline-primary btn-sm" title="View & Print">
                             <Eye size={16} />
                           </Link>
+                          <button 
+                            onClick={() => deleteChallan(challan._id)} 
+                            className="btn btn-outline-danger btn-sm" 
+                            title="Delete Challan"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
