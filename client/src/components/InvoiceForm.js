@@ -284,7 +284,7 @@ const InvoiceForm = () => {
 
         {/* Invoice Header Section */}
         <div className="row mb-4 border-bottom pb-3">
-          <div className="col-md-6 border-end">
+          <div className="col-md-6 border-md-end border-sm-bottom pb-3 pb-md-0">
             <h5 className="text-primary border-bottom pb-2">Customer Details</h5>
             <div className="mb-2">
               <label className="form-label small mb-1">Customer Name</label>

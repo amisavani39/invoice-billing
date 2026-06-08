@@ -144,7 +144,7 @@ const ChallanForm = () => {
 
         {/* Address Details */}
         <div className="row mb-4">
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-3 border-md-end border-sm-bottom pb-3 pb-md-0">
             <h5 className="text-primary border-bottom pb-2">From (Sender)</h5>
             <div className="mb-2">
               <label className="form-label small mb-1">Company Name</label>

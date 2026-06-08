@@ -128,109 +128,114 @@ const ChallanDetail = () => {
       </div>
 
       {/* PIXEL PERFECT PHYSICAL SLIP (PRINT REF) */}
-      <div ref={componentRef} className="physical-bill-wrapper">
-        <div className="bill-container">
-          <div className="duplicate-stamp">DUPLICATE</div>
+      <div className="responsive-container shadow-sm p-2 p-md-4 bg-light rounded mb-4 overflow-auto">
+        <div className="text-muted small mb-2 d-md-none text-center">
+           Scroll horizontally to view full challan
+        </div>
+        <div ref={componentRef} className="physical-bill-wrapper">
+          <div className="bill-container">
+            <div className="duplicate-stamp">DUPLICATE</div>
 
-          <h1 className="doc-title">DELIVERY CHALLAN</h1>
-          <div className="title-divider"></div>
+            <h1 className="doc-title">DELIVERY CHALLAN</h1>
+            <div className="title-divider"></div>
 
-          <div className="header-grid">
-            <div className="header-left">
-              <div className="from-label">From:</div>
-              <div className="company-title">SHREE SHYAM FAB</div>
-              <p className="address-line">Plot No.-2048/8B, Road No.-03,</p>
-              <p className="address-line">Diamond Ind., Chachhi M.</p>
-              <p className="address-line">Surat, Gujarat</p>
-            </div>
-            <div className="header-right">
-              <div className="meta-row">
-                <span className="meta-label">P.O. No.</span>
-                <span className="meta-value">{challan?.poNo || "____________"}</span>
+            <div className="header-grid">
+              <div className="header-left">
+                <div className="from-label">From:</div>
+                <div className="company-title">SHREE SHYAM FAB</div>
+                <p className="address-line">Plot No.-2048/8B, Road No.-03,</p>
+                <p className="address-line">Diamond Ind., Chachhi M.</p>
+                <p className="address-line">Surat, Gujarat</p>
               </div>
-              <div className="meta-row">
-                <span className="meta-label">Ch. No.</span>
-                <span className="meta-value">{challan?.chNo || "____________"}</span>
-              </div>
-              <div className="meta-row">
-                <span className="meta-label">Date</span>
-                <span className="meta-value">{formatDate(challan?.date)}</span>
+              <div className="header-right">
+                <div className="meta-row">
+                  <span className="meta-label">P.O. No.</span>
+                  <span className="meta-value">{challan?.poNo || "____________"}</span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-label">Ch. No.</span>
+                  <span className="meta-value">{challan?.chNo || "____________"}</span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-label">Date</span>
+                  <span className="meta-value">{formatDate(challan?.date)}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="customer-row">
-            <span className="customer-label">To M/s</span>
-            <span className="customer-value">
-              {(challan?.toDetails?.companyName || "").replace(/\s*\(.*\)\s*/g, '').trim() || "________________________"}
-            </span>
-          </div>
-
-          <div className="gstin-strip">
-            <span className="gstin-label">GSTIN</span>
-            <div className="gstin-boxes">
-              {gstinArray.map((char, index) => (
-                <div key={index} className="gstin-box">{char}</div>
-              ))}
+            <div className="customer-row">
+              <span className="customer-label">To M/s</span>
+              <span className="customer-value">
+                {(challan?.toDetails?.companyName || "").replace(/\s*\(.*\)\s*/g, '').trim() || "________________________"}
+              </span>
             </div>
-          </div>
 
-          <div className="declaration">
-            Please receive the undermentioned goods in good order & condition
-          </div>
+            <div className="gstin-strip">
+              <span className="gstin-label">GSTIN</span>
+              <div className="gstin-boxes">
+                {gstinArray.map((char, index) => (
+                  <div key={index} className="gstin-box">{char}</div>
+                ))}
+              </div>
+            </div>
 
-          <table className="grid-table">
-            <thead>
-              <tr>
-                <th className="col-part">PARTICULARS</th>
-                <th className="col-qty">QUANTITY</th>
-                <th className="col-rate">RATE</th>
-                <th className="col-per">PER</th>
-                <th className="col-amt">AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <tr key={index}>
-                  <td className="col-part">{item.particulars}</td>
-                  <td className="col-qty">{renderQuantity(item.quantity)}</td>
-                  <td className="col-rate">{item.rate ? Number(item.rate).toFixed(2) : ""}</td>
-                  <td className="col-per">{item.per}</td>
-                  <td className="col-amt">
-                    {item.rate && item.quantity ? (Number(item.quantity) * Number(item.rate)).toFixed(2) : ""}
-                  </td>
+            <div className="declaration">
+              Please receive the undermentioned goods in good order & condition
+            </div>
+
+            <table className="grid-table">
+              <thead>
+                <tr>
+                  <th className="col-part">PARTICULARS</th>
+                  <th className="col-qty">QUANTITY</th>
+                  <th className="col-rate">RATE</th>
+                  <th className="col-per">PER</th>
+                  <th className="col-amt">AMOUNT</th>
                 </tr>
-              ))}
-              
-              {/* Empty Row Padding */}
-              {Array.from({ length: paddingRowsCount }).map((_, i) => (
-                <tr key={`padding-${i}`}>
-                  <td className="col-part"></td>
-                  <td className="col-qty"></td>
-                  <td className="col-rate"></td>
-                  <td className="col-per"></td>
-                  <td className="col-amt"></td>
+              </thead>
+              <tbody>
+                {items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="col-part">{item.particulars}</td>
+                    <td className="col-qty">{renderQuantity(item.quantity)}</td>
+                    <td className="col-rate">{item.rate ? Number(item.rate).toFixed(2) : ""}</td>
+                    <td className="col-per">{item.per}</td>
+                    <td className="col-amt">
+                      {item.rate && item.quantity ? (Number(item.quantity) * Number(item.rate)).toFixed(2) : ""}
+                    </td>
+                  </tr>
+                ))}
+                
+                {/* Empty Row Padding */}
+                {Array.from({ length: paddingRowsCount }).map((_, i) => (
+                  <tr key={`padding-${i}`}>
+                    <td className="col-part"></td>
+                    <td className="col-qty"></td>
+                    <td className="col-rate"></td>
+                    <td className="col-per"></td>
+                    <td className="col-amt"></td>
+                  </tr>
+                ))}
+
+                {/* GRAND TOTAL ROW - Part of the same table structure */}
+                <tr className="total-row-tr">
+                  <td colSpan="4" className="total-label-cell">GRAND TOTAL</td>
+                  <td className="total-value-cell">{totalAmount > 0 ? totalAmount.toFixed(2) : "0.00"}</td>
                 </tr>
-              ))}
-
-              {/* GRAND TOTAL ROW - Part of the same table structure */}
-              <tr className="total-row-tr">
-                <td colSpan="4" className="total-label-cell">GRAND TOTAL</td>
-                <td className="total-value-cell">{totalAmount > 0 ? totalAmount.toFixed(2) : "0.00"}</td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div className="footer-note">
-            Note: Goods once sold will not be taken back. Our Responsibility ceases once the goods leave our premises.
-          </div>
-
-          <div className="challan-footer">
-            <div className="received-sign">
-              Received By: {challan?.receivedBySignature || "________________"}
+              </tbody>
+            </table>
+            
+            <div className="footer-note">
+              Note: Goods once sold will not be taken back. Our Responsibility ceases once the goods leave our premises.
             </div>
-            <div className="prepared-sign">
-              Prepared By: {challan?.preparedBySignature || "________________"}
+
+            <div className="challan-footer">
+              <div className="received-sign">
+                Received By: {challan?.receivedBySignature || "________________"}
+              </div>
+              <div className="prepared-sign">
+                Prepared By: {challan?.preparedBySignature || "________________"}
+              </div>
             </div>
           </div>
         </div>

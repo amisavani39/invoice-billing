@@ -113,20 +113,20 @@ const Dashboard = () => {
       animate={{ opacity: 1, y: 0 }}
       className="container py-4"
     >
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
           <h1 className="h3 mb-0 text-gray-800">Dashboard Overview</h1>
-          <p className="text-muted">Welcome, {user?.firstName || user?.username || 'User'}</p>
-          <p className="text-muted small">{profile?.companyDetails?.name ? `Managing ${profile.companyDetails.name}` : ''}</p>
+          <p className="text-muted mb-0">Welcome, {user?.firstName || user?.username || 'User'}</p>
+          <p className="text-muted small mb-0">{profile?.companyDetails?.name ? `Managing ${profile.companyDetails.name}` : ''}</p>
         </div>
-        <div className="d-flex gap-2">
-           <Link to="/invoices" className="btn btn-outline-primary shadow-sm">
+        <div className="d-flex flex-wrap gap-2">
+           <Link to="/invoices" className="btn btn-outline-primary shadow-sm btn-sm">
             View All Invoices
           </Link>
-          <Link to="/challans" className="btn btn-outline-primary shadow-sm">
+          <Link to="/challans" className="btn btn-outline-primary shadow-sm btn-sm">
             View All Challans
           </Link>
-          <Link to="/create-invoice" className="btn btn-primary shadow-sm">
+          <Link to="/create-invoice" className="btn btn-primary shadow-sm btn-sm">
             <Plus size={18} className="me-1" /> New Invoice
           </Link>
         </div>
@@ -141,7 +141,7 @@ const Dashboard = () => {
 
       {/* --- LIVE STATS CARDS --- */}
       <div className="row g-4 mb-5">
-        <div className="col-md-3">
+        <div className="col-12 col-sm-6 col-lg-3">
           <div className="card border-0 shadow-sm h-100 border-start border-primary border-4">
             <div className="card-body d-flex align-items-center p-4">
               <div className="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
@@ -155,7 +155,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-12 col-sm-6 col-lg-3">
           <div className="card border-0 shadow-sm h-100 border-start border-success border-4">
             <div className="card-body d-flex align-items-center p-4">
               <div className="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
@@ -169,7 +169,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-12 col-sm-6 col-lg-3">
           <div className="card border-0 shadow-sm h-100 border-start border-info border-4">
             <div className="card-body d-flex align-items-center p-4">
               <div className="rounded-circle bg-info bg-opacity-10 p-3 me-3 text-info">
@@ -183,7 +183,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-12 col-sm-6 col-lg-3">
           <div className="card border-0 shadow-sm h-100 border-start border-warning border-4">
             <div className="card-body d-flex align-items-center p-4">
               <div className="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">

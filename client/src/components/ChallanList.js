@@ -122,29 +122,24 @@ const ChallanList = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
           <button onClick={() => navigate("/dashboard")} className="btn btn-sm btn-outline-secondary mb-2 d-flex align-items-center">
             <ArrowLeft size={14} className="me-1" /> Back to Dashboard
           </button>
           <h1 className="h3 mb-0 text-gray-800">Delivery Challans</h1>
-          <p className="text-muted small">Manage and track your delivery challans ({filteredChallans.length} total)</p>
+          <p className="text-muted small mb-0">Manage and track your delivery challans ({filteredChallans.length} total)</p>
         </div>
-        <div className="d-flex gap-2 align-items-center">
+        <div className="d-flex flex-wrap gap-2 align-items-center">
           {message && (
-            <div className="alert alert-success py-2 px-3 mb-0 small">
+            <div className="alert alert-success py-1 px-3 mb-0 small">
               {message}
             </div>
           )}
-          {error && (
-            <div className="alert alert-danger py-2 px-3 mb-0 small">
-              {error}
-            </div>
-          )}
-          <button onClick={exportToExcel} className="btn btn-outline-success d-flex align-items-center">
+          <button onClick={exportToExcel} className="btn btn-outline-success btn-sm d-flex align-items-center">
             <FileSpreadsheet size={18} className="me-2" /> Export Excel
           </button>
-          <Link to="/create-challan" className="btn btn-primary d-flex align-items-center">
+          <Link to="/create-challan" className="btn btn-primary btn-sm d-flex align-items-center">
             <Plus size={18} className="me-2" /> Create Challan
           </Link>
         </div>

@@ -172,16 +172,16 @@ const InvoiceList = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
           <h1 className="h3 mb-0 text-gray-800">Invoices</h1>
-          <p className="text-muted small">Manage and track your GST invoices ({totalInvoices} total)</p>
+          <p className="text-muted small mb-0">Manage and track your GST invoices ({totalInvoices} total)</p>
         </div>
-        <div className="d-flex gap-2">
-          <button onClick={exportToExcel} className="btn btn-outline-success d-flex align-items-center">
+        <div className="d-flex flex-wrap gap-2">
+          <button onClick={exportToExcel} className="btn btn-outline-success btn-sm d-flex align-items-center">
             <FileSpreadsheet size={18} className="me-2" /> Export Excel
           </button>
-          <Link to="/create-invoice" className="btn btn-primary d-flex align-items-center">
+          <Link to="/create-invoice" className="btn btn-primary btn-sm d-flex align-items-center">
             <Plus size={18} className="me-2" /> Create Invoice
           </Link>
         </div>

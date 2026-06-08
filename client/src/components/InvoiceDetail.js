@@ -116,25 +116,29 @@ const InvoiceDetail = () => {
       </div>
 
       {/* Invoice Document */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        ref={componentRef}
-        className="invoice-container bg-white mx-auto"
-        style={{
-          width: '210mm',
-          height: '297mm',
-          padding: '10mm',
-          color: '#000',
-          fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-          fontSize: '10pt',
-          lineHeight: '1.2',
-          border: '1px solid #000',
-          boxSizing: 'border-box',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
+      <div className="responsive-container shadow-sm p-2 p-md-4 bg-light rounded mb-4 overflow-auto">
+        <div className="text-muted small mb-2 d-md-none text-center">
+           Scroll horizontally to view full invoice
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          ref={componentRef}
+          className="invoice-container bg-white mx-auto"
+          style={{
+            width: '210mm',
+            minHeight: '297mm',
+            padding: '10mm',
+            color: '#000',
+            fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+            fontSize: '10pt',
+            lineHeight: '1.2',
+            border: '1px solid #000',
+            boxSizing: 'border-box',
+            position: 'relative',
+            backgroundColor: 'white'
+          }}
+        >
         {/* Top Header */}
         <div className="d-flex justify-content-between px-2 py-1" style={{ borderBottom: '1px solid #000' }}>
           <span className="fw-bold">TAX INVOICE</span>
@@ -339,6 +343,7 @@ const InvoiceDetail = () => {
           </div>
         </div>
       </motion.div>
+      </div>
       
       <style>
         {`
