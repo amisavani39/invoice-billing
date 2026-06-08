@@ -9,7 +9,7 @@ const ViewChallan = () => {
     const { isLoaded, getToken } = useAuth();
     
     const [challan, setChallan] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = unbeseState(true);
     const [error, setError] = useState(null);
 
     // Explicit Date Formatter

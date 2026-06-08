@@ -23,9 +23,10 @@ const ChallanList = () => {
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      console.log('Fetching challans from /api/challans...');
-      const res = await axios.get('/api/challans', config);
-      console.log('Challan fetch response:', res.data);
+      const apiUrl = "/api/challans";
+      console.log(`[FETCH] Challans from: ${apiUrl}`);
+      const res = await axios.get(apiUrl, config);
+      console.log('[FETCH] Challan response status:', res.status);
       
       if (Array.isArray(res.data)) {
         setChallans(res.data);

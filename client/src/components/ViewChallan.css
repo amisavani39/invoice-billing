@@ -2,326 +2,311 @@
 
 /* STRICT A4 PRINT SPECIFICATIONS */
 @page {
-    size: A4;
+    size: A4 portrait;
     margin: 0;
 }
 
+/* Base Wrapper for Browser View */
 .physical-bill-wrapper {
     display: flex;
     justify-content: center;
     background-color: #f0f2f5;
-    padding: 20px;
-    font-family: Arial, Helvetica, sans-serif;
+    padding: 40px 20px;
+    font-family: 'Times New Roman', Times, serif;
 }
 
+/* Challan Container - A4 Portrait */
 .bill-container {
-    width: 794px;
-    min-height: 1123px;
-    padding: 30px;
+    width: 210mm;
+    min-height: 297mm; /* Changed to min-height as requested */
+    padding: 10mm;
     background: #fff;
-    border: 2px solid #c56b8f;
+    border: 1px solid #d97aa0; /* Thin pink border */
     box-sizing: border-box;
     position: relative;
     display: flex;
     flex-direction: column;
+    box-shadow: none !important; 
+    border-radius: 0 !important;
+    overflow: visible !important; /* Force visible overflow */
 }
 
+/* Pink DUPLICATE Badge */
 .duplicate-stamp {
     position: absolute;
-    right: 30px;
-    top: 30px;
-    border: 1px solid #c56b8f;
-    color: #c56b8f;
-    padding: 4px 10px;
+    right: 10mm;
+    top: 10mm;
+    border: 1px solid #d97aa0;
+    color: #d97aa0;
+    padding: 2px 8px;
     font-size: 14px;
     font-weight: bold;
-    font-family: sans-serif;
-    border-radius: 2px;
 }
 
+/* Header Pink Title */
 .doc-title {
     text-align: center;
-    margin: 0 0 5px 0;
-    font-family: "Times New Roman", Times, serif;
+    margin: 5mm 0;
     font-size: 28px;
     font-weight: bold;
-    color: #c56b8f;
+    color: #d97aa0;
     text-transform: uppercase;
 }
 
 .title-divider {
-    border-top: 3px double #c56b8f;
-    margin-bottom: 25px;
+    border-top: 2px solid #d97aa0;
+    margin-bottom: 5mm;
     width: 100%;
 }
 
-/* HEADER GRID */
+/* FIRST ROW STRUCTURE: 75% LEFT, 25% RIGHT */
 .header-grid {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: 5mm;
+    border-bottom: 1px solid #cfcfcf;
+    padding-bottom: 3mm;
 }
 
 .header-left {
-    flex: 1.5;
+    flex: 0 0 75%;
 }
 
-.header-left .from-label {
-    font-size: 12px;
-    color: #000;
-    margin-bottom: 4px;
-    display: block;
-}
-
-.header-left .company-title {
-    font-size: 22px;
-    font-weight: bold;
-    margin: 0 0 5px 0;
-    color: #000;
-    font-family: sans-serif;
-}
-
-.header-left .address-text {
+.from-label {
     font-size: 14px;
+    font-weight: bold;
     color: #000;
-    margin: 2px 0;
+}
+
+.company-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 1mm 0;
+    font-family: 'Caveat', cursive;
+    color: #000;
+}
+
+.address-line {
+    font-size: 14px;
+    margin: 0;
+    color: #000;
 }
 
 .header-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    flex: 0 0 25%;
+    border-left: 1px solid #cfcfcf;
+    padding-left: 5mm;
 }
 
 .meta-row {
     display: flex;
-    align-items: center;
-    margin-bottom: 8px;
+    justify-content: space-between;
+    margin-bottom: 2mm;
+    font-size: 14px;
+    color: #000;
 }
 
 .meta-label {
-    font-size: 14px;
     font-weight: bold;
-    margin-right: 10px;
-    color: #000;
 }
 
-.handwritten-val {
+.meta-value {
+    border-bottom: 1px dotted #000;
+    flex-grow: 1;
+    text-align: right;
+    margin-left: 2mm;
     font-family: 'Caveat', cursive;
-    font-size: 26px;
+    font-size: 18px;
     font-weight: 700;
-    color: #000;
-    min-width: 130px;
-    text-align: left;
-    border-bottom: 1px solid #000;
-    padding-left: 5px;
-    line-height: 0.9;
 }
 
-/* CUSTOMER ROW */
-.consignee-section {
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.consignee-row {
+/* CUSTOMER SECTION */
+.customer-row {
+    margin-bottom: 5mm;
     display: flex;
     align-items: flex-end;
-    margin-bottom: 15px;
 }
 
-.consignee-label {
+.customer-label {
     font-weight: bold;
     font-size: 16px;
-    margin-right: 10px;
+    white-space: nowrap;
+    margin-right: 5mm;
     color: #000;
 }
 
-.consignee-value {
-    font-family: 'Caveat', cursive;
-    font-size: 32px;
-    font-weight: 700;
-    color: #000;
+.customer-value {
     border-bottom: 1px solid #000;
     flex-grow: 1;
-    line-height: 0.8;
-    padding-left: 10px;
+    font-size: 24px;
+    padding-left: 2mm;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    color: #000;
 }
 
-/* GSTIN STRIP */
+/* GSTIN SECTION */
 .gstin-strip {
     display: flex;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 5mm;
 }
 
 .gstin-label {
     font-weight: bold;
     font-size: 14px;
-    margin-right: 15px;
+    margin-right: 5mm;
     color: #000;
 }
 
 .gstin-boxes {
-    display: inline-flex;
+    display: flex;
 }
 
 .gstin-box {
-    width: 24px;
-    height: 24px;
-    border: 1px solid #c56b8f;
-    display: flex;
+    width: 7mm;
+    height: 7mm;
+    border: 1px solid #cfcfcf;
+    display: flex; /* Fixed from invalid display: center */
     justify-content: center;
     align-items: center;
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    margin-right: -1px; /* collapse borders */
+    margin-right: -1px; /* Collapse borders */
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1;
+    box-sizing: border-box;
+    text-transform: uppercase;
 }
 
+/* NOTICE TEXT (Green) */
 .declaration {
     text-align: center;
-    font-size: 12px;
-    color: #000;
-    padding: 6px 0;
-    border-top: 1px solid #c56b8f;
-    border-bottom: 1px solid #c56b8f;
-    margin-bottom: 15px;
+    color: #6b8f4e; /* Green instruction text */
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 5mm;
 }
 
-/* TABLE */
+/* TABLE STRUCTURE */
 .grid-table {
     width: 100%;
-    height: 550px; /* STRICT FIXED HEIGHT */
-    border: 1px solid #c56b8f;
     border-collapse: collapse;
+    border: 1px solid #cfcfcf;
+    /* Removed flex-grow to allow margin-top: auto in footer to work */
     table-layout: fixed;
 }
 
 .grid-table th {
-    border: 1px solid #c56b8f;
-    background-color: #c56b8f;
-    color: #fff;
-    padding: 8px 4px;
+    background-color: #fce8f0; /* Light pink background */
+    border: 1px solid #cfcfcf;
+    padding: 2mm;
     font-size: 12px;
+    color: #000;
     text-align: center;
     font-weight: bold;
 }
 
 .grid-table td {
-    border-right: 1px solid #c56b8f;
-    border-left: 1px solid #c56b8f;
-    padding: 6px 8px;
+    border-left: 1px solid #cfcfcf;
+    border-right: 1px solid #cfcfcf;
+    padding: 1.5mm 2mm;
+    font-size: 14px;
     vertical-align: top;
-    height: 35px; /* Minimum cell height */
-}
-
-/* Vertical lines explicitly drawn */
-.grid-table th, .grid-table td {
-    border-right: 1px solid #c56b8f;
-    border-left: 1px solid #c56b8f;
-}
-
-/* Precise Column Widths */
-.col-sr { width: 6%; text-align: center; font-family: Arial, sans-serif; font-size: 14px; }
-.col-part { width: 46%; text-align: left; }
-.col-qty { width: 14%; text-align: center; }
-.col-rate { width: 14%; text-align: right; }
-.col-per { width: 10%; text-align: center; }
-.col-amt { width: 10%; text-align: right; }
-
-.hw-particulars {
-    font-family: 'Caveat', cursive;
-    font-size: 24px;
-    font-weight: 700;
-    color: #000;
-    line-height: 1;
-}
-
-.hw-numbers {
-    font-family: 'Caveat', cursive;
-    font-size: 24px;
-    font-weight: 700;
+    height: 10mm; /* Fixed height for rows to create ruled look */
     color: #000;
 }
 
-.fraction-container {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1;
-    font-family: 'Caveat', cursive;
-    font-size: 22px;
-    font-weight: 700;
-    color: #000;
+/* Empty rows ruled lines */
+.grid-table tr {
+    border-bottom: 1px solid #cfcfcf;
 }
 
-.fraction-num {
-    padding-bottom: 2px;
-}
+/* Column Proportions: Particulars (45%), Qty (12%), Rate (13%), Per (15%), Amount (15%) */
+.col-part { width: 45%; text-align: left; }
+.col-qty { width: 12%; text-align: center; }
+.col-rate { width: 13%; text-align: right; }
+.col-per { width: 15%; text-align: center; }
+.col-amt { width: 15%; text-align: right; }
 
-.fraction-den {
-    border-top: 1px solid #000;
-    padding-top: 2px;
-    width: 100%;
-    text-align: center;
-}
+/* Remove unwanted columns' styles if any remain */
+.col-sr { display: none; }
 
-/* TOTAL ROW */
-.total-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    border: 1px solid #c56b8f;
-    border-top: none;
-    margin-bottom: 15px;
-}
-
-.total-label {
+/* GRAND TOTAL ROW - Integrated into table structure */
+.total-row-tr {
+    background-color: #fce8f0; /* Light pink background */
     font-weight: bold;
-    font-size: 16px;
-    padding: 10px 20px;
-    border-right: 1px solid #c56b8f;
+    height: 12mm; /* Slightly taller for prominence */
 }
 
-.total-value {
-    width: 10%; /* Matches amt column width */
+.total-row-tr td {
+    border: 1px solid #cfcfcf;
+    vertical-align: middle !important;
+}
+
+.total-label-cell {
     text-align: right;
-    padding: 10px 8px;
-    font-family: 'Caveat', cursive;
-    font-size: 26px;
-    font-weight: 700;
-    color: #000;
-    box-sizing: border-box;
-}
-
-/* FOOTER */
-.disclaimer-banner {
-    font-size: 12px;
-    font-style: italic;
-    color: #333;
-    padding-top: 10px;
-}
-
-.signature-blocks {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    width: 100%;
-    padding-top: 50px;
-    margin-top: auto;
-}
-
-.sig-text {
-    font-weight: bold;
+    padding-right: 5mm !important;
     font-size: 14px;
     color: #000;
 }
 
+.total-value-cell {
+    text-align: right;
+    padding-right: 2mm !important;
+    font-family: 'Caveat', cursive;
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+}
+
+/* FOOTER SECTION */
+.bill-footer {
+    margin-top: auto; /* Anchors the entire group to bottom */
+}
+
+.footer-note {
+    color: red; /* Footer note in red */
+    font-size: 11px;
+    text-align: center;
+    margin: 3mm 0;
+    font-weight: bold;
+}
+
+.challan-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #cfcfcf;
+}
+
+.received-sign,
+.prepared-sign {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+}
+
+/* PRINT MODE */
 @media print {
-    body, html { margin: 0; padding: 0; width: 794px; }
-    .physical-bill-wrapper { padding: 0; background: none; justify-content: flex-start; }
-    .bill-container { border: 2px solid #c56b8f; margin: 0; }
-    .navbar, .sidebar, .no-print { display: none !important; }
+    body {
+        margin: 0;
+        padding: 0;
+        background: none;
+    }
+    .physical-bill-wrapper {
+        padding: 0;
+        background: none;
+    }
+    .bill-container {
+        border: 1px solid #d97aa0;
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+    }
+    .no-print, .navbar, .btn, .sidebar {
+        display: none !important;
+    }
 }

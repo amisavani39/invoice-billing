@@ -27,7 +27,9 @@ const InvoiceList = () => {
       // Ensure searchTerm and date are clean
       const q = searchTerm || '';
       const d = date || '';
-      const res = await axios.get(`/api/invoices?search=${q}&date=${d}&page=${pageNum}&limit=10`, config);
+      const apiUrl = `/api/invoices?search=${q}&date=${d}&page=${pageNum}&limit=10`;
+      console.log(`[FETCH] Invoices from: ${apiUrl}`);
+      const res = await axios.get(apiUrl, config);
       
       if (res.data && Array.isArray(res.data.invoices)) {
         setInvoices(res.data.invoices);

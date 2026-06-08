@@ -88,7 +88,9 @@ const InvoiceForm = () => {
     try {
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const res = await axios.get('/api/user/profile', config);
+      const apiUrl = '/api/user/profile';
+      console.log(`[FETCH] Profile from: ${apiUrl}`);
+      const res = await axios.get(apiUrl, config);
       if (res.data && res.data.companyDetails) {
         setFormData(prev => ({
           ...prev,
@@ -227,7 +229,9 @@ const InvoiceForm = () => {
         ...totals,
       };
 
-      const res = await axios.post('/api/invoices', invoiceData, config);
+      const apiUrl = "/api/invoices";
+      console.log(`[POST] Saving invoice to: ${apiUrl}`);
+      const res = await axios.post(apiUrl, invoiceData, config);
 
       setSuccessMessage("Invoice Saved Successfully!");
       const savedInvoice = res.data.invoice || res.data;

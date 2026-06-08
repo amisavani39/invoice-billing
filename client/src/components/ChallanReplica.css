@@ -1,0 +1,295 @@
+/* 
+  ChallanReplica.css
+  Exact 1:1 reproduction of Indian Delivery Challan page.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+
+:root {
+  --pink-primary: #e093ac; /* Exact stationery pink */
+  --ink-blue: #1c4998;     /* Ballpoint blue */
+  --notice-green: #2d6a4f; /* Green notice text */
+  --paper-cream: #fdfaf0;  /* Aged paper texture base */
+}
+
+.replica-container {
+  padding: 40px;
+  background-color: #333; /* Dark surface for photography contrast */
+  display: flex;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.replica-paper {
+  width: 210mm;
+  height: 297mm;
+  background-color: var(--paper-cream);
+  padding: 10mm;
+  border: 1pt solid var(--pink-primary); /* 1. OUTER BORDER */
+  box-sizing: border-box;
+  position: relative;
+  font-family: 'Times New Roman', Times, serif;
+  display: flex;
+  flex-direction: column;
+
+  /* PHOTOGRAPHIC REALISM */
+  box-shadow: 
+    15px 15px 40px rgba(0,0,0,0.6), 
+    inset 0 0 50px rgba(0,0,0,0.03);
+  
+  /* Texture & Fold simulation */
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/paper-fibers.png'),
+    linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(0,0,0,0.02) 100%);
+  
+  /* Slight fold simulation */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.03), transparent);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Uneven lighting */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 20% 20%, transparent 0%, rgba(0,0,0,0.05) 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Photo distortion */
+  transform: rotateX(2deg) rotateY(-1deg) rotateZ(0.2deg);
+}
+
+/* 2. HEADER */
+.replica-header {
+  text-align: center;
+  position: relative;
+  margin-bottom: 5mm;
+}
+
+.centered-title {
+  color: var(--pink-primary);
+  font-size: 28pt;
+  font-weight: bold;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.duplicate-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 1.5pt solid var(--pink-primary);
+  color: var(--pink-primary);
+  padding: 1mm 5mm;
+  border-radius: 5mm;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+/* 3. FIRST INFORMATION SECTION */
+.info-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5mm;
+}
+
+.from-container {
+  border: 1.5pt solid var(--pink-primary);
+  width: 58%;
+  min-height: 25mm;
+  padding: 2mm;
+  position: relative;
+}
+
+.label {
+  color: var(--pink-primary);
+  font-weight: bold;
+  font-size: 11pt;
+}
+
+.meta-vertical-box {
+  border: 1.5pt solid var(--pink-primary);
+  width: 38%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-row {
+  flex: 1;
+  border-bottom: 1.5pt solid var(--pink-primary);
+  display: flex;
+  align-items: center;
+  padding: 0 3mm;
+}
+
+.meta-row:last-child {
+  border-bottom: none;
+}
+
+.meta-row .label {
+  width: 25mm;
+}
+
+/* 4. CUSTOMER SECTION */
+.customer-section {
+  border-bottom: 1.5pt solid var(--pink-primary);
+  margin-bottom: 5mm;
+  padding-bottom: 1mm;
+  display: flex;
+  align-items: baseline;
+}
+
+.customer-name {
+  margin-left: 5mm;
+  flex: 1;
+}
+
+/* 5. GSTIN ROW */
+.gstin-section {
+  margin-bottom: 5mm;
+}
+
+.gstin-grid {
+  display: flex;
+}
+
+.gstin-cell {
+  width: 7.5mm;
+  height: 7.5mm;
+  border: 1pt solid var(--pink-primary);
+  margin-right: -1pt;
+}
+
+/* 6. GREEN NOTICE LINE */
+.green-notice-line {
+  color: var(--notice-green);
+  text-align: center;
+  font-weight: bold;
+  font-size: 11pt;
+  margin-bottom: 5mm;
+  padding: 2mm 0;
+  border-top: 1pt solid var(--pink-primary);
+  border-bottom: 1pt solid var(--pink-primary);
+}
+
+/* 7. ITEMS TABLE */
+.table-container {
+  flex-grow: 0;
+  margin-bottom: 0;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5pt solid var(--pink-primary);
+}
+
+.items-table th {
+  border: 1.5pt solid var(--pink-primary);
+  color: var(--pink-primary);
+  padding: 2mm;
+  font-size: 11pt;
+}
+
+.items-table td {
+  border-left: 1.5pt solid var(--pink-primary);
+  border-right: 1.5pt solid var(--pink-primary);
+  height: 10mm;
+  padding: 0 4mm;
+}
+
+.col-particulars { width: 58%; }
+.col-quantity { width: 15%; text-align: center; }
+.col-rate { width: 15%; text-align: center; }
+.col-per { width: 12%; text-align: center; }
+
+.item-row {
+  border-bottom: 1.5pt solid var(--pink-primary);
+}
+
+.empty-row td {
+  border-bottom: none;
+}
+
+/* 8. LOWER PAGE */
+.lower-page-ruled {
+  flex-grow: 1;
+  border-left: 1.5pt solid var(--pink-primary);
+  border-right: 1.5pt solid var(--pink-primary);
+  border-bottom: 1.5pt solid var(--pink-primary);
+  position: relative;
+}
+
+.ruled-line {
+  height: 10mm;
+  border-bottom: 1pt solid var(--pink-primary);
+  opacity: 0.3;
+}
+
+.signature-area {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.signature {
+  font-size: 28pt;
+  transform: rotate(-5deg);
+}
+
+/* 9. FOOTER */
+.replica-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10mm 5mm 5mm 5mm;
+}
+
+.footer-item {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+}
+
+.center-align {
+  align-items: center;
+}
+
+.footer-line {
+  border-bottom: 1.5pt solid var(--pink-primary);
+  width: 100%;
+  margin-top: 5mm;
+}
+
+/* HANDWRITING */
+.handwritten-blue {
+  font-family: 'Caveat', cursive;
+  color: var(--ink-blue);
+  font-size: 18pt;
+  font-weight: bold;
+  text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.1);
+}
+
+.content-padding {
+  padding-left: 5mm;
+  padding-top: 2mm;
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  .replica-container { padding: 0; background: white; }
+  .replica-paper { 
+    transform: none; 
+    box-shadow: none; 
+    border: 1pt solid var(--pink-primary);
+    background-image: none;
+  }
+  .replica-paper::before, .replica-paper::after { display: none; }
+}

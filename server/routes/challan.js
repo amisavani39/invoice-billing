@@ -47,6 +47,19 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// @route    GET api/challans/stats
+// @desc     Get challan statistics for the user
+// @access   Private
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const totalChallans = await Challan.countDocuments({ user: req.user.id });
+    res.json({ totalChallans });
+  } catch (err) {
+    console.error('Error fetching challan stats:', err.message);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+});
+
 // @route    GET api/challans
 // @desc     Get all challans for the user
 // @access   Private

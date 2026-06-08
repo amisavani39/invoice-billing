@@ -20,7 +20,6 @@ const initialFormState = {
   toDetails: {
     companyName: "",
     locationBranch: "",
-    mobileNumber: "",
   },
   gstin: "",
   items: [{ particulars: "", quantity: 0, rate: 0, per: "pcs" }],
@@ -86,7 +85,9 @@ const ChallanForm = () => {
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-      await axios.post("/api/challans", formData, config);
+      const apiUrl = "/api/challans";
+      console.log(`[POST] Saving challan to: ${apiUrl}`);
+      await axios.post(apiUrl, formData, config);
 
       setSuccessMessage("Challan saved successfully");
       
@@ -181,10 +182,6 @@ const ChallanForm = () => {
             <div className="mb-2">
                 <label className="form-label small mb-1">GSTIN</label>
                 <input type="text" name="gstin" className="form-control" placeholder="15-character GSTIN" maxLength="15" value={formData.gstin} onChange={handleInputChange} />
-            </div>
-            <div className="mb-2">
-                <label className="form-label small mb-1">Mobile Number</label>
-                <input type="text" name="toDetails.mobileNumber" className="form-control" placeholder="10-digit mobile number" value={formData.toDetails.mobileNumber} onChange={handleInputChange} />
             </div>
           </div>
         </div>
