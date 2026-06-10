@@ -1,12 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const Challan = require('../models/Challan');
-const auth = require('../middleware/auth');
+// Auth middleware is already applied in server.js, so we don't need it here.
 
 // @route    POST api/challans
 // @desc     Create a delivery challan
 // @access   Private
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ msg: 'Unauthorized: User ID missing' });
+  }
+
   const { chNo, fromDetails, toDetails, items } = req.body;
 
   // Basic validation
@@ -26,7 +31,7 @@ router.post('/', auth, async (req, res) => {
   try {
     const newChallan = new Challan({
       ...req.body,
-      user: req.user.id
+      user: userId
     });
 
     const challan = await newChallan.save();
@@ -50,7 +55,7 @@ router.post('/', auth, async (req, res) => {
 // @route    GET api/challans/stats
 // @desc     Get challan statistics for the user
 // @access   Private
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
     const totalChallans = await Challan.countDocuments({ user: req.user.id });
     res.json({ totalChallans });
@@ -61,23 +66,68 @@ router.get('/stats', auth, async (req, res) => {
 });
 
 // @route    GET api/challans
-// @desc     Get all challans for the user
+// @desc     Get all challans for the user (with search and pagination)
 // @access   Private
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
+  const userId = req.user?.id;
+  const label = `[FETCH-CHALLANS] ${userId}`;
+  console.time(label);
+
   try {
-    const challans = await Challan.find({ user: req.user.id })
-      .sort({ date: -1 });
-    res.json(challans);
+    const { search, date, page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageSize = parseInt(limit);
+    
+    let query = { user: userId };
+
+    if (search && search.trim() !== '' && search !== 'undefined') {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { chNo: searchRegex },
+        { 'toDetails.companyName': searchRegex },
+      ];
+    }
+
+    if (date && date.trim() !== '' && date !== 'undefined') {
+      const startDate = new Date(date);
+      if (!isNaN(startDate.getTime())) {
+        const endDate = new Date(date);
+        endDate.setDate(endDate.getDate() + 1);
+        query.date = { $gte: startDate, $lt: endDate };
+      }
+    }
+
+    // Calculate total documents for accurate pagination
+    const total = await Challan.countDocuments(query);
+    const pages = Math.ceil(total / pageSize);
+
+    // Extremely simplified and robust fetch
+    const challans = await Challan.find(query)
+      .select('chNo toDetails date gstin items createdAt poNo fromDetails')
+      .sort({ date: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+
+    console.timeEnd(label);
+    
+    res.json({
+      challans: challans || [],
+      total,
+      page: parseInt(page),
+      pages
+    });
   } catch (err) {
+    console.timeEnd(label);
     console.error('Error fetching challans:', err.message);
-    res.status(500).json({ msg: 'Server Error' });
+    res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 });
 
 // @route    GET api/challans/:id
 // @desc     Get challan by ID
 // @access   Private
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const challan = await Challan.findById(req.params.id);
 
@@ -103,7 +153,7 @@ router.get('/:id', auth, async (req, res) => {
 // @route    DELETE api/challans/:id
 // @desc     Delete a delivery challan
 // @access   Private
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const challan = await Challan.findById(req.params.id);
 

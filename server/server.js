@@ -7,92 +7,101 @@ require("dotenv").config();
 
 const app = express();
 
-// --- GLOBAL REQUEST LOGGER ---
-app.use((req, res, next) => {
-  console.log(`[REQ] ${req.method} ${req.originalUrl || req.url} - ${new Date().toISOString()}`);
-  next();
-});
+// Disable Mongoose Buffering to prevent hanging queries on cold starts
+mongoose.set('bufferCommands', false);
 
-// --- MIDDLEWARE ---
-app.use(compression());
+// --- 1. CORS CONFIGURATION ---
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://invoice-billing-s4u1.onrender.com',
+  /\.vercel\.app$/ 
+];
+
 app.use(cors({
-  origin: "*",
+  origin: function (origin, callback) {
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return allowed === origin;
+    });
+    callback(null, true); // Fallback allow during transition
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Clerk-SDK-Version', 'X-Clerk-Auth-Token'],
+  optionsSuccessStatus: 200
 }));
-app.use(express.json());
 
-// Request Logger
-app.use((req, res, next) => {
-  console.log(`[REQUEST] ${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
+// --- 2. MIDDLEWARE ---
+app.use(compression());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// --- 3. API ROUTES ---
 const auth = require('./middleware/auth');
 const dashboardRoutes = require('./routes/dashboard');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const invoiceRoutes = require('./routes/invoices');
+const challanRoutes = require('./routes/challan');
 
-// --- API ROUTES ---
-console.log("[SERVER] Registering API Routes...");
+// Standard API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', auth, dashboardRoutes); // Registered BEFORE other specific resources to ensure precedence
+app.use('/api/user', auth, userRoutes);
+app.use('/api/invoices', auth, invoiceRoutes);
+app.use('/api/challans', auth, challanRoutes);
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/user', auth, require('./routes/user'));
-app.use('/api/invoices', auth, require('./routes/invoices'));
-app.use('/api/challans', auth, require('./routes/challan'));
-app.use('/api/dashboard', auth, dashboardRoutes);
-
-// Health Check API
+// --- 4. HEALTH & STATUS ---
 app.get("/api/health", (req, res) => {
-  console.log("[API] Health Check Hit");
   res.status(200).json({ 
-    status: "OK", 
-    uptime: process.uptime(),
-    dbStatus: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected"
+    status: "UP", 
+    db: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
+    timestamp: new Date().toISOString() 
   });
 });
 
-// --- PRODUCTION SETUP ---
-// The static files and catch-all route MUST be after API routes
-if (process.env.NODE_ENV === 'production') {
-  console.log("[SERVER] Running in Production Mode - Serving static files");
+app.get("/", (req, res) => res.send("GST Billing API v1.0 Production"));
+
+// --- 5. PRODUCTION STATIC FILES ---
+const NODE_ENV = process.env.NODE_ENV || 'production';
+if (NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../client/build');
-  app.use(express.static(buildPath));
-
-  app.get("*path", (req, res) => {
-    // Exclude API routes from catch-all to prevent HTML response for failed API calls
-    if (!req.originalUrl.startsWith('/api')) {
-      res.sendFile(path.join(buildPath, 'index.html'));
-    } else {
-      console.warn(`[SERVER] 404 - API Route Not Found: ${req.originalUrl}`);
-      res.status(404).json({ msg: "API Route Not Found" });
-    }
-  });
-} else {
-  console.log("[SERVER] Running in Development Mode");
-  app.get("/", (req, res) => {
-    res.send("Backend API is running...");
-  });
+  if (require('fs').existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+    app.get(/.*/, (req, res) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(buildPath, 'index.html'));
+      }
+    });
+  }
 }
 
-// --- DATABASE CONNECTION ---
-console.log("[DB] Attempting to connect to MongoDB...");
-if (!process.env.MONGO_URI) {
-  console.error("[DB] FATAL ERROR: MONGO_URI is not defined in .env file");
-  process.exit(1);
-}
+// --- 6. ERROR HANDLER ---
+app.use((err, req, res, next) => {
+  console.error(`[SERVER ERROR] ${err.message}`);
+  res.status(err.status || 500).json({
+    success: false,
+    msg: "Internal Server Error",
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
 
-mongoose.connect(process.env.MONGO_URI)
+// --- 7. DB CONNECTION & SERVER START ---
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI)
   .then(() => {
-    console.log("[DB] MongoDB Connected Successfully");
-    console.log(`[DB] Database Name: ${mongoose.connection.name}`);
+    console.log('✅ MongoDB Connected');
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
-  .catch((err) => {
-    console.error("[DB] MongoDB Connection Error:");
-    console.error(err.message);
+  .catch(err => {
+    console.error(`❌ DB Connection Error: ${err.message}`);
     process.exit(1);
   });
-
-// --- SERVER START ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`[SERVER] Listening on port ${PORT}`);
-  console.log(`[SERVER] API Root: http://localhost:${PORT}/api`);
-});

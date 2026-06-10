@@ -4,6 +4,14 @@
   color: #1f2937;
 }
 
+@media print {
+  .App {
+    min-height: unset !important;
+    height: auto !important;
+    background-color: transparent !important;
+  }
+}
+
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -213,3 +221,30 @@ th {
     padding: 0;
   }
 }
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.h-2 { height: 0.5rem; }
+.h-3 { height: 0.75rem; }
+.h-4 { height: 1rem; }
+.w-50 { width: 50%; }
+.w-75 { width: 75%; }
+.w-100 { width: 100%; }
+

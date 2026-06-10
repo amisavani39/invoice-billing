@@ -62,6 +62,11 @@ const InvoiceSchema = new mongoose.Schema({
     branchName: { type: String },
   },
   terms: { type: [String] },
+  status: {
+    type: String,
+    enum: ['PAID', 'PENDING', 'OVERDUE'],
+    default: 'PENDING'
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -69,8 +74,10 @@ const InvoiceSchema = new mongoose.Schema({
 });
 
 // Add indexes for performance
+InvoiceSchema.index({ user: 1, createdAt: -1 });
+InvoiceSchema.index({ user: 1 });
 InvoiceSchema.index({ invoiceNumber: 1 });
 InvoiceSchema.index({ 'customerDetails.name': 1 });
 InvoiceSchema.index({ date: -1 });
 
-module.exports = mongoose.model('invoice', InvoiceSchema);
+module.exports = mongoose.model('Invoice', InvoiceSchema, 'invoices');

@@ -7,23 +7,36 @@ const User = require('../models/User');
 // @desc     Get current user's profile
 // @access   Public
 router.get('/profile', async (req, res) => {
+  const userId = req.user ? req.user.id : null;
+  const label = `[PROFILE-FETCH] ${userId || 'unknown'}`;
+  console.time(label);
+
   try {
-    // For public access, we'll try to find by ID if provided in query, otherwise return first user for demo
-    const userId = req.query.id || (req.user ? req.user.id : null);
-    let user;
-    if (userId) {
-      user = await User.findById(userId).select('-password');
-    } else {
-      user = await User.findOne().select('-password');
+    if (!userId) {
+      console.timeEnd(label);
+      return res.status(401).json({ msg: 'Not authorized' });
     }
 
+    // Reuse user object from auth middleware if available
+    if (req.fullUser) {
+      console.timeEnd(label);
+      return res.json(req.fullUser);
+    }
+
+    const user = await User.findById(userId)
+      .select('-password')
+      .lean();
+
+    console.timeEnd(label);
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
+    
     res.json(user);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.timeEnd(label);
+    console.error('[PROFILE ERROR]', err.message);
+    res.status(500).json({ msg: 'Server Error' });
   }
 });
 

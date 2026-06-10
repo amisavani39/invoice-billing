@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Save, ArrowLeft } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
@@ -87,7 +87,7 @@ const ChallanForm = () => {
 
       const apiUrl = "/api/challans";
       console.log(`[POST] Saving challan to: ${apiUrl}`);
-      await axios.post(apiUrl, formData, config);
+      await api.post(apiUrl, formData, config);
 
       setSuccessMessage("Challan saved successfully");
       

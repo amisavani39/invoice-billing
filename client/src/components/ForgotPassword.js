@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import './Auth.css';
 
 const ForgotPassword = () => {
@@ -36,7 +36,7 @@ const ForgotPassword = () => {
     console.log('Attempting password reset for:', trimmedEmail);
 
     try {
-      await axios.post('/api/auth/forgot-password', { email: trimmedEmail, newPassword: trimmedNewPassword });
+      await api.post('/api/auth/forgot-password', { email: trimmedEmail, newPassword: trimmedNewPassword });
       setMessage('Password reset successful');
       console.log('Password reset successful');
       setTimeout(() => {

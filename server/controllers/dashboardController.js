@@ -1,73 +1,108 @@
+const mongoose = require('mongoose');
 const Invoice = require('../models/Invoice');
 const Challan = require('../models/Challan');
 
 /**
- * @desc     Get consolidated dashboard statistics (Global)
- * @route    GET /api/dashboard
+ * @desc     Get consolidated dashboard statistics for the logged-in user
+ * @route    GET /api/dashboard/stats
  * @access   Private
  */
 exports.getDashboardStats = async (req, res) => {
-  console.log("--- Dashboard API Hit ---");
-  console.log('Target User ID:', req.user?.id || 'N/A');
+  const userId = req.user?.id;
+  
+  if (!userId) {
+    console.error('[DASHBOARD] No userId in request');
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
 
   try {
-    // 1. Total Invoices - Global Count
-    const totalInvoices = await Invoice.countDocuments();
-    console.log(`[DB Query] Total Invoices count: ${totalInvoices}`);
-
-    // 2. Total Challans - Global Count
-    const totalChallans = await Challan.countDocuments({});
-    console.log(`[DB Query] Total Challans count: ${totalChallans}`);
-
-    // 3. Total Revenue - Sum of grandTotal across all invoices
-    const revenueResult = await Invoice.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: {
-            $sum: "$grandTotal"
+    const filter = { user: userId };
+    
+    // Aggregation for speed and accuracy + Real Challan Count
+    const [invoiceData, totalChallans] = await Promise.all([
+      Invoice.aggregate([
+        { $match: filter },
+        {
+          $facet: {
+            totals: [
+              {
+                $group: {
+                  _id: null,
+                  count: { $sum: 1 },
+                  revenue: { $sum: "$grandTotal" }
+                }
+              }
+            ],
+            recent: [
+              { $sort: { createdAt: -1 } },
+              { $limit: 10 },
+              { 
+                  $project: { 
+                      invoiceNumber: 1, 
+                      'customerDetails.name': 1, 
+                      date: 1, 
+                      grandTotal: 1, 
+                      createdAt: 1 
+                  } 
+              }
+            ]
           }
         }
-      }
+      ]),
+      Challan.countDocuments(filter) // REQUIREMENT: Fetch real challan count
     ]);
-    
-    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-    console.log(`[DB Query] Total Revenue calculated: ${totalRevenue}`);
 
-    // 4. Recent Invoices - Latest 5
-    const recentInvoices = await Invoice.find()
-      .select('invoiceNumber customerDetails.name date grandTotal createdAt')
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean(); // Use lean for faster retrieval and standard JS objects
-    
-    console.log(`[DB Query] Recent Invoices fetched: ${recentInvoices.length}`);
+    const stats = invoiceData[0]?.totals[0] || { count: 0, revenue: 0 };
+    const recentTransactions = invoiceData[0]?.recent || [];
 
-    const dashboardResponse = {
-      totalInvoices,
-      totalChallans,
-      totalRevenue,
-      recentInvoices: recentInvoices || []
+    const dashboardData = {
+      totalInvoices: stats.count || 0,
+      revenue: stats.revenue || 0,
+      challans: totalChallans || 0, // REAL COUNT: No longer mirroring invoices
+      recentTransactions: recentTransactions,
+      systemStatus: "Connected",
+      timestamp: new Date().toISOString()
     };
 
-    console.log("Mongo Data (Dashboard Stats):", JSON.stringify(dashboardResponse, null, 2));
-    console.log('--- DASHBOARD CONTROLLER SUCCESS ---');
-    
-    return res.status(200).json(dashboardResponse);
+    // Mandatory Logging (Requirement #Debug)
+    console.log("--- DASHBOARD API DEBUG ---");
+    console.log("API URL: /api/dashboard/stats");
+    console.log("User ID:", userId);
+    console.log("Fetched Records Count:", dashboardData.totalInvoices);
+    console.log("Calculated Revenue:", dashboardData.revenue);
+    console.log("Latest Transactions (Count):", recentTransactions.length);
+    console.log("---------------------------");
+
+    return res.status(200).json(dashboardData);
 
   } catch (err) {
-    console.error('--- DASHBOARD CONTROLLER ERROR ---');
-    console.error('Error Message:', err.message);
-    console.error('Stack Trace:', err.stack);
-
+    console.error('[DASHBOARD ERROR]', err.message);
     return res.status(500).json({
       success: false,
-      msg: 'Server Error in Dashboard Controller',
+      msg: "Server Error",
       error: err.message,
       totalInvoices: 0,
-      totalRevenue: 0,
-      totalChallans: 0,
-      recentInvoices: []
+      revenue: 0,
+      challans: 0,
+      recentTransactions: []
     });
+  }
+};
+
+/**
+ * @desc     Debug visibility issues
+ */
+exports.debugDashboardData = async (req, res) => {
+  const userId = req.user?.id;
+  try {
+    const [invTotal, invUser, chTotal, chUser] = await Promise.all([
+      Invoice.countDocuments({}),
+      Invoice.countDocuments({ user: userId }),
+      Challan.countDocuments({}),
+      Challan.countDocuments({ user: userId })
+    ]);
+    res.json({ userId, invoices: { total: invTotal, user: invUser }, challans: { total: chTotal, user: chUser } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

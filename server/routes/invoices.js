@@ -7,10 +7,14 @@ const Invoice = require('../models/Invoice');
 // @access   Private (Protected by auth middleware)
 router.post('/', async (req, res) => {
   try {
-    // req.user.id is set by the auth middleware
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ msg: 'Unauthorized: User ID missing' });
+    }
+
     const newInvoice = new Invoice({
       ...req.body,
-      user: req.user.id
+      user: userId
     });
 
     const invoice = await newInvoice.save();
@@ -31,20 +35,26 @@ router.post('/', async (req, res) => {
 // @desc     Get all invoices for the authenticated user
 // @access   Private
 router.get('/', async (req, res) => {
-  try {
-    const { search, date, page = 1, limit = 10 } = req.query;
-    
-    // Filter by authenticated user's ID
-    let query = { user: req.user.id };
+  const userId = req.user?.id;
+  const label = `[FETCH-INVOICES] ${userId}`;
+  console.time(label);
 
-    if (search && search !== 'undefined' && search !== '') {
+  try {
+    const { search, date, page = 1, limit = 10, diagnostics = false } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageSize = parseInt(limit);
+    
+    let query = { user: userId };
+
+    if (search && search.trim() !== '' && search !== 'undefined') {
+      const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
-        { invoiceNumber: { $regex: search, $options: 'i' } },
-        { 'customerDetails.name': { $regex: search, $options: 'i' } },
+        { invoiceNumber: searchRegex },
+        { 'customerDetails.name': searchRegex },
       ];
     }
 
-    if (date && date !== 'undefined' && date !== '') {
+    if (date && date.trim() !== '' && date !== 'undefined') {
       const startDate = new Date(date);
       if (!isNaN(startDate.getTime())) {
         const endDate = new Date(date);
@@ -53,22 +63,40 @@ router.get('/', async (req, res) => {
       }
     }
 
+    // Calculate total documents for accurate pagination
     const total = await Invoice.countDocuments(query);
-    const invoices = await Invoice.find(query)
-      .select('invoiceNumber customerDetails.name customerDetails.mobileNumber customerDetails.gstNumber date grandTotal')
-      .sort({ date: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+    const pages = Math.ceil(total / pageSize);
 
+    // Use standard find for maximum reliability and speed
+    const invoices = await Invoice.find(query)
+      .select('invoiceNumber customerDetails date grandTotal createdAt status')
+      .sort({ date: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+
+    let diagData = null;
+    if (diagnostics === 'true' || diagnostics === true) {
+        const globalTotal = await Invoice.countDocuments({});
+        diagData = {
+            globalTotal,
+            userTotal: total,
+            orphanCount: globalTotal - (await Invoice.countDocuments({ user: { $exists: true, $ne: null } }))
+        };
+    }
+
+    console.timeEnd(label);
     res.json({
-      invoices,
+      invoices: invoices || [],
       total,
       page: parseInt(page),
-      pages: Math.ceil(total / limit) || 1
+      pages,
+      diagnostics: diagData
     });
   } catch (err) {
+    console.timeEnd(label);
     console.error('Error fetching invoices:', err.message);
-    res.status(500).json({ msg: 'Server Error' });
+    res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 });
 

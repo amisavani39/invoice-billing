@@ -59,4 +59,10 @@ const ChallanSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('challan', ChallanSchema);
+// Add indexes for performance
+ChallanSchema.index({ user: 1, createdAt: -1 });
+ChallanSchema.index({ user: 1 });
+ChallanSchema.index({ chNo: 1 });
+ChallanSchema.index({ date: -1 });
+
+module.exports = mongoose.model('Challan', ChallanSchema, 'challans');

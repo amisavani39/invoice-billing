@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useReactToPrint } from 'react-to-print';
@@ -30,7 +30,7 @@ const ChallanDetail = () => {
       try {
         setLoading(true);
         const token = await getToken();
-        const res = await axios.get(`/api/challans/${id}`, {
+        const res = await api.get(`/api/challans/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data) setChallan(res.data);
@@ -64,7 +64,7 @@ const ChallanDetail = () => {
     if (window.confirm('Are you sure you want to delete this challan?')) {
       try {
         const token = await getToken();
-        await axios.delete(`/api/challans/${id}`, {
+        await api.delete(`/api/challans/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         navigate('/challans');
@@ -128,12 +128,9 @@ const ChallanDetail = () => {
       </div>
 
       {/* PIXEL PERFECT PHYSICAL SLIP (PRINT REF) */}
-      <div className="responsive-container shadow-sm p-2 p-md-4 bg-light rounded mb-4 overflow-auto">
-        <div className="text-muted small mb-2 d-md-none text-center">
-           Scroll horizontally to view full challan
-        </div>
-        <div ref={componentRef} className="physical-bill-wrapper">
-          <div className="bill-container">
+      <div className="challan-display-wrapper shadow-sm bg-light rounded mb-4">
+        <div ref={componentRef} className="invoice-container mx-auto">
+          <div className="invoice-box">
             <div className="duplicate-stamp">DUPLICATE</div>
 
             <h1 className="doc-title">DELIVERY CHALLAN</h1>
@@ -218,18 +215,18 @@ const ChallanDetail = () => {
                 ))}
 
                 {/* GRAND TOTAL ROW - Part of the same table structure */}
-                <tr className="total-row-tr">
+                <tr className="total-row-tr summary-section">
                   <td colSpan="4" className="total-label-cell">GRAND TOTAL</td>
                   <td className="total-value-cell">{totalAmount > 0 ? totalAmount.toFixed(2) : "0.00"}</td>
                 </tr>
               </tbody>
             </table>
             
-            <div className="footer-note">
+            <div className="footer-note terms-section">
               Note: Goods once sold will not be taken back. Our Responsibility ceases once the goods leave our premises.
             </div>
 
-            <div className="challan-footer">
+            <div className="signature-section">
               <div className="received-sign">
                 Received By: {challan?.receivedBySignature || "________________"}
               </div>
@@ -243,8 +240,111 @@ const ChallanDetail = () => {
       
       {/* Hide the top navbar/buttons during print using standard CSS */}
       <style>{`
+        .invoice-container {
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 auto !important;
+            padding: 10mm !important;
+            box-sizing: border-box !important;
+            page-break-after: always !important;
+            overflow: hidden !important;
+            background-color: #fff;
+            color: #000;
+            position: relative;
+        }
+
+        .invoice-box {
+          border: 2px solid var(--pink-primary);
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          min-height: 1046px; 
+          background-color: #fff;
+          overflow: hidden;
+          padding: 10px;
+        }
+
+        .challan-display-wrapper {
+          width: 100%;
+          overflow: hidden;
+          padding: 20px 0;
+          display: flex;
+          justify-content: center;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .challan-display-wrapper::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .challan-display-wrapper {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+
+        @media screen and (max-width: 800px) {
+          .invoice-container {
+            transform: scale(${window.innerWidth / 850});
+            transform-origin: top center;
+          }
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: auto;
+            height: 80px !important;
+            overflow: hidden !important;
+            padding-bottom: 0 !important;
+        }
+
+        .summary-section, .terms-section {
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
         @media print {
+          @page { 
+            size: A4 portrait; 
+            margin: 0; 
+          }
+          html, body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+          }
           .no-print, .navbar, .sidebar { display: none !important; }
+          
+          .container { 
+            max-width: none !important; 
+            width: auto !important; 
+            padding: 0 !important; 
+            margin: 0 !important; 
+          }
+
+          .invoice-container {
+            padding: 10mm !important;
+            margin: 0 auto !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            min-height: 297mm !important;
+            transform: none !important;
+          }
+
+          .invoice-box {
+            height: 277mm !important; /* 297mm - 20mm padding */
+            border: 2px solid var(--pink-primary) !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          /* Remove every height problem */
+          * {
+              min-height: unset !important;
+          }
         }
       `}</style>
     </div>

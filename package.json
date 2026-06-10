@@ -4,10 +4,12 @@
   "description": "GST Billing Application",
   "private": true,
   "scripts": {
-    "server": "cd server && npm install && npm start",
-    "client": "cd client && npm install && npm start",
-    "start": "concurrently \"npm run server\" \"npm run client\"",
-    "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+    "server": "cd server && npm start",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm install && npm run build",
+    "start": "cd server && npm start"
   },
   "dependencies": {
     "concurrently": "^8.2.2"

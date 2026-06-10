@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import './ViewChallan.css';
@@ -30,7 +30,7 @@ const ViewChallan = () => {
             try {
                 setLoading(true);
                 const token = await getToken();
-                const res = await axios.get(`/api/challans/${id}`, {
+                const res = await api.get(`/api/challans/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setChallan(res.data);

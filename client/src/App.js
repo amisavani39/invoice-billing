@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import api from './utils/api';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -16,6 +17,20 @@ import './App.css';
 
 function App() {
   const location = useLocation();
+
+  // WAKE UP BACKEND (Render Cold Start Mitigation)
+  useEffect(() => {
+    const wakeUp = async () => {
+      try {
+        console.log('[SYSTEM] Waking up backend...');
+        await api.get('/api/health');
+        console.log('[SYSTEM] Backend is awake.');
+      } catch (err) {
+        console.warn('[SYSTEM] Backend wake-up ping failed (expected if cold).');
+      }
+    };
+    wakeUp();
+  }, []);
 
   return (
     <div className="App">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
@@ -90,7 +90,7 @@ const InvoiceForm = () => {
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
       const apiUrl = '/api/user/profile';
       console.log(`[FETCH] Profile from: ${apiUrl}`);
-      const res = await axios.get(apiUrl, config);
+      const res = await api.get(apiUrl, config);
       if (res.data && res.data.companyDetails) {
         setFormData(prev => ({
           ...prev,
@@ -231,7 +231,7 @@ const InvoiceForm = () => {
 
       const apiUrl = "/api/invoices";
       console.log(`[POST] Saving invoice to: ${apiUrl}`);
-      const res = await axios.post(apiUrl, invoiceData, config);
+      const res = await api.post(apiUrl, invoiceData, config);
 
       setSuccessMessage("Invoice Saved Successfully!");
       const savedInvoice = res.data.invoice || res.data;
