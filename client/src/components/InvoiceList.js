@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../utils/api';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Plus, Calendar, FileSpreadsheet, Trash2, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Search, Eye, Plus, Calendar, Trash2, ChevronLeft, ChevronRight, RefreshCw, FileSpreadsheet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 
 const InvoiceList = () => {
   const { getToken } = useAuth();
   const { user, isLoaded: isUserLoaded } = useUser();
-  
+
   // Data State
   const [allInvoices, setAllInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +22,10 @@ const InvoiceList = () => {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const itemsPerPage = 10;
 
   /**
-   * HIGH-LIMIT FETCH (Requirement: Fetch all 39 records for proper counting)
+   * HIGH-LIMIT FETCH STRATEGY
    */
   const fetchAllInvoices = useCallback(async (isManual = false) => {
     if (!user?.id) return;
@@ -89,9 +89,9 @@ const InvoiceList = () => {
   }, [allInvoices, search, dateFilter]);
 
   const totalRecords = filteredInvoices.length;
-  const totalPages = Math.ceil(totalRecords / recordsPerPage);
-  const indexOfLastItem = currentPage * recordsPerPage;
-  const indexOfFirstItem = indexOfLastItem - recordsPerPage;
+  const totalPages = Math.ceil(totalRecords / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentInvoices = filteredInvoices.slice(indexOfFirstItem, indexOfLastItem);
 
   // Handlers
@@ -112,19 +112,46 @@ const InvoiceList = () => {
     }
   };
 
-  const exportToExcel = () => {
-    if (totalRecords === 0) return alert('No data to export');
-    const dataToExport = filteredInvoices.map(inv => ({
-      'Invoice No': inv.invoiceNumber,
-      'Date': new Date(inv.date).toLocaleDateString('en-IN'),
-      'Customer': inv.customerDetails?.name || 'N/A',
-      'Amount': inv.grandTotal || 0,
-      'Status': inv.status || 'PENDING'
-    }));
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
-    XLSX.writeFile(wb, `Invoices_Export.xlsx`);
+  /**
+   * DEFINITIVE EXCEL EXPORT (Fixes corruption error)
+   * This method uses XLSX.writeFile() which handles binary generation natively, 
+   * preventing the "invalid file format" error in Microsoft Excel.
+   */
+  const handleExportExcel = () => {
+    try {
+      if (!filteredInvoices || filteredInvoices.length === 0) {
+        alert("No invoice data found to export.");
+        return;
+      }
+
+      console.log("[EXPORT] Generating Excel for:", filteredInvoices.length, "records");
+
+      // 1. Map data to the requested simple columns
+      const exportData = filteredInvoices.map(inv => ({
+        "Invoice No": inv.invoiceNumber || "",
+        "Customer Name": inv.customerDetails?.name || "",
+        "GST Number": inv.customerDetails?.gstNumber || "",
+        "Date": inv.date ? new Date(inv.date).toLocaleDateString('en-IN') : "",
+        "Sub Total": inv.subTotal || 0,
+        "GST Amount": (inv.cgst || 0) + (inv.sgst || 0) + (inv.igst || 0),
+        "Grand Total": inv.grandTotal || 0,
+        "Status": inv.status || "PENDING"
+      }));
+
+      // 2. Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+
+      // 3. Trigger native browser download (Ensures valid XLSX structure)
+      const fileName = `Invoices_List_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      console.log("[EXPORT] Download started: ", fileName);
+    } catch (err) {
+      console.error("[EXPORT ERROR]:", err);
+      alert("Failed to generate Excel sheet. Please try again.");
+    }
   };
 
   if (!isUserLoaded) return <div className="container py-5 text-center"><div className="spinner-border text-primary"></div></div>;
@@ -141,8 +168,8 @@ const InvoiceList = () => {
           <button onClick={() => fetchAllInvoices(true)} disabled={refreshing} className="btn btn-outline-secondary btn-sm d-flex align-items-center shadow-sm">
             <RefreshCw size={16} className={`me-2 ${refreshing ? 'animate-spin' : ''}`} /> Sync
           </button>
-          <button onClick={exportToExcel} className="btn btn-outline-success btn-sm d-flex align-items-center shadow-sm">
-            <FileSpreadsheet size={16} className="me-2" /> Export
+          <button onClick={handleExportExcel} className="btn btn-success btn-sm d-flex align-items-center shadow-sm">
+            <FileSpreadsheet size={16} className="me-2" /> Export Excel
           </button>
           <Link to="/create-invoice" className="btn btn-primary btn-sm d-flex align-items-center shadow-sm fw-bold">
             <Plus size={16} className="me-1" /> New Invoice
@@ -176,6 +203,10 @@ const InvoiceList = () => {
           </div>
         </div>
       </div>
+
+      {error && <div className="alert alert-soft-warning py-2 mb-4 border-0 shadow-sm small d-flex align-items-center">
+        <RefreshCw size={14} className="me-2" /> {error}
+      </div>}
 
       {/* Data Table */}
       <div className="card border-0 shadow-sm overflow-hidden mb-4">

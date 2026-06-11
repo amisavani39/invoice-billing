@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useReactToPrint } from 'react-to-print';
-import { Printer, ArrowLeft, Trash2, Download } from 'lucide-react';
+import { Printer, ArrowLeft, Trash2, Download, FileSpreadsheet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import api from '../utils/api';
+import { exportInvoiceToExcel } from '../utils/excelExport';
 
 const InvoiceDetail = () => {
   const { id } = useParams();
@@ -114,6 +115,9 @@ const InvoiceDetail = () => {
           </button>
           <button onClick={handleDownloadPDF} className="btn btn-success d-flex align-items-center">
             <Download size={18} className="me-2" /> Download PDF
+          </button>
+          <button onClick={() => exportInvoiceToExcel(invoice)} className="btn btn-outline-success d-flex align-items-center bg-white">
+            <FileSpreadsheet size={18} className="me-2" /> Export Excel
           </button>
           <button onClick={deleteInvoice} className="btn btn-danger d-flex align-items-center">
             <Trash2 size={18} />

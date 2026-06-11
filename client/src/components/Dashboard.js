@@ -58,6 +58,8 @@ const Dashboard = () => {
       // We request a high limit (5000) to ensure we get all 39+ records for the dashboard count
       const endpoints = ["/api/dashboard/stats", "/api/invoices?limit=5000", "/api/invoice?limit=5000", "/api/bills?limit=5000"];
       
+      let finalStats = null;
+      
       for (const url of endpoints) {
         try {
           const res = await api.get(url, config);
@@ -65,14 +67,14 @@ const Dashboard = () => {
           if (url.includes("/stats")) {
             // Optimized path: Backend already calculated everything (including real Challan count)
             const data = res.data;
-            const freshStats = {
+            finalStats = {
                 totalInvoices: data.totalInvoices || 0,
                 totalRevenue: data.revenue || data.totalRevenue || 0,
                 totalChallans: data.challans || data.totalChallans || 0, // Should be 3 from DB
                 allInvoices: Array.isArray(data.recentTransactions) ? data.recentTransactions : (Array.isArray(data.recentInvoices) ? data.recentInvoices : []),
                 systemStatus: "Connected"
             };
-            setStats(freshStats);
+            setStats(finalStats);
             endpointUsed = url;
             break;
           }
@@ -102,14 +104,14 @@ const Dashboard = () => {
               console.warn("Challan fallback fetch failed, using 0");
             }
 
-            const freshStats = {
+            finalStats = {
                 totalInvoices,
                 totalRevenue: revenue,
                 totalChallans: realChallanCount, // REQUIREMENT: Actual count (3)
                 allInvoices: fetchedInvoices,
                 systemStatus: "Connected"
             };
-            setStats(freshStats);
+            setStats(finalStats);
             break;
           }
         } catch (e) {
@@ -117,7 +119,7 @@ const Dashboard = () => {
         }
       }
 
-      if (!endpointUsed) {
+      if (!endpointUsed || !finalStats) {
         throw new Error("No data could be retrieved from any API endpoint.");
       }
 
@@ -130,6 +132,19 @@ const Dashboard = () => {
       if (profileRes) setProfile(profileRes.data);
       
       setError(null);
+      
+      // Update Cache for fast subsequent loads
+      if (user?.id) {
+        localStorage.setItem(`dashboard_stats_${user.id}`, JSON.stringify({
+            totalInvoices: finalStats.totalInvoices,
+            totalRevenue: finalStats.totalRevenue,
+            totalChallans: finalStats.totalChallans,
+            allInvoices: finalStats.allInvoices.slice(0, 100), // Cache first 100
+            systemStatus: "Connected",
+            timestamp: new Date().toISOString()
+        }));
+      }
+
     } catch (err) {
       console.error("[DASHBOARD] Fetch failed:", err.message);
       if (isManual) alert("Refresh failed: " + err.message);

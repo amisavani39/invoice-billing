@@ -6,8 +6,7 @@ import axios from 'axios';
  */
 
 const PRODUCTION_URL = 'https://invoice-billing-s4u1.onrender.com';
-// Force local backend for testing unless explicitly in production build
-const baseURL = process.env.NODE_ENV === 'production' ? PRODUCTION_URL : 'http://localhost:5000';
+const baseURL = process.env.REACT_APP_API_URL || PRODUCTION_URL;
 
 const api = axios.create({
     baseURL,

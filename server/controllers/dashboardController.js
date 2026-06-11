@@ -35,7 +35,7 @@ exports.getDashboardStats = async (req, res) => {
             ],
             recent: [
               { $sort: { createdAt: -1 } },
-              { $limit: 10 },
+              { $limit: 500 },
               { 
                   $project: { 
                       invoiceNumber: 1, 
@@ -95,13 +95,27 @@ exports.getDashboardStats = async (req, res) => {
 exports.debugDashboardData = async (req, res) => {
   const userId = req.user?.id;
   try {
-    const [invTotal, invUser, chTotal, chUser] = await Promise.all([
+    const [invTotal, invUser, chTotal, chUser, invOrphan, chOrphan] = await Promise.all([
       Invoice.countDocuments({}),
       Invoice.countDocuments({ user: userId }),
       Challan.countDocuments({}),
-      Challan.countDocuments({ user: userId })
+      Challan.countDocuments({ user: userId }),
+      Invoice.countDocuments({ user: { $exists: false } }),
+      Challan.countDocuments({ user: { $exists: false } })
     ]);
-    res.json({ userId, invoices: { total: invTotal, user: invUser }, challans: { total: chTotal, user: chUser } });
+    res.json({ 
+      userId, 
+      invoices: { 
+        total: invTotal, 
+        withThisUser: invUser, 
+        orphan: invOrphan 
+      }, 
+      challans: { 
+        total: chTotal, 
+        withThisUser: chUser, 
+        orphan: chOrphan 
+      } 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

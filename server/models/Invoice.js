@@ -73,7 +73,8 @@ const InvoiceSchema = new mongoose.Schema({
   },
 });
 
-// Add indexes for performance
+// Add indexes for performance and data integrity
+InvoiceSchema.index({ user: 1, invoiceNumber: 1 }, { unique: true });
 InvoiceSchema.index({ user: 1, createdAt: -1 });
 InvoiceSchema.index({ user: 1 });
 InvoiceSchema.index({ invoiceNumber: 1 });

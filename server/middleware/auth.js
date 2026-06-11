@@ -20,7 +20,11 @@ const auth = async (req, res, next) => {
     try {
       payload = await clerkClient.verifyToken(token);
     } catch (verifyErr) {
-      return res.status(401).json({ msg: 'Invalid or expired token.' });
+      console.error('[AUTH] Token Verification Failed:', verifyErr.message);
+      return res.status(401).json({ 
+        msg: 'Invalid or expired token.', 
+        error: verifyErr.message // This might return "Token is not valid" from Clerk
+      });
     }
 
     const userId = payload.sub;

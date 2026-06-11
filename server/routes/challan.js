@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const XLSX = require('xlsx');
 const Challan = require('../models/Challan');
 // Auth middleware is already applied in server.js, so we don't need it here.
 
@@ -101,9 +102,14 @@ router.get('/', async (req, res) => {
     const total = await Challan.countDocuments(query);
     const pages = Math.ceil(total / pageSize);
 
-    // Extremely simplified and robust fetch
-    const challans = await Challan.find(query)
-      .select('chNo toDetails date gstin items createdAt poNo fromDetails')
+    // Optimized fetch
+    let queryExec = Challan.find(query);
+    
+    if (req.query.full !== 'true') {
+      queryExec = queryExec.select('chNo toDetails date gstin items createdAt poNo fromDetails');
+    }
+
+    const challans = await queryExec
       .sort({ date: -1, createdAt: -1 })
       .skip(skip)
       .limit(pageSize)
@@ -121,6 +127,61 @@ router.get('/', async (req, res) => {
     console.timeEnd(label);
     console.error('Error fetching challans:', err.message);
     res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+});
+
+// @route    GET api/challans/export
+// @desc     Export all challans to Excel
+// @access   Private
+router.get('/export', async (req, res) => {
+  const userId = req.user?.id;
+  try {
+    // Fetch all records for this user with full details
+    const challans = await Challan.find({ user: userId })
+      .sort({ date: -1, createdAt: -1 })
+      .lean();
+
+    if (!challans || challans.length === 0) {
+      return res.status(404).json({ msg: 'No data found to export' });
+    }
+
+    const dataToExport = [];
+    challans.forEach(challan => {
+      const items = challan.items || [{}];
+      items.forEach(item => {
+        dataToExport.push({
+          'Challan No': challan.chNo || '',
+          'Date': challan.date ? new Date(challan.date).toLocaleDateString('en-IN') : '',
+          'Client Name': challan.toDetails?.companyName || 'N/A',
+          'GSTIN': challan.gstin || 'N/A',
+          'Particulars': item.particulars || '',
+          'Qty': item.quantity || 0,
+          'Unit': item.quantityUnit || 'pcs',
+          'Rate': item.rate || 0,
+          'Amount': (item.quantity || 0) * (item.rate || 0),
+          'Created At': challan.createdAt ? new Date(challan.createdAt).toLocaleString('en-IN') : ''
+        });
+      });
+    });
+
+    // Create Workbook
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Challans');
+
+    // Generate Buffer
+    const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    // Set Headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Challans_Export.xlsx');
+    res.setHeader('Content-Length', buffer.length);
+
+    // Send Buffer
+    return res.status(200).send(buffer);
+  } catch (err) {
+    console.error('Export API Error:', err.message);
+    res.status(500).json({ msg: 'Export failed', error: err.message });
   }
 });
 

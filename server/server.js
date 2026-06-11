@@ -27,7 +27,7 @@ app.use(cors({
       if (allowed instanceof RegExp) return allowed.test(origin);
       return allowed === origin;
     });
-    callback(null, true); // Fallback allow during transition
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -50,9 +50,9 @@ const challanRoutes = require('./routes/challan');
 
 // Standard API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', auth, dashboardRoutes); // Registered BEFORE other specific resources to ensure precedence
+app.use('/api/dashboard', auth, dashboardRoutes);
 app.use('/api/user', auth, userRoutes);
-app.use('/api/invoices', auth, invoiceRoutes);
+app.use('/api/invoices', auth, invoiceRoutes); // Verified: /api/invoices/export will hit invoiceRoutes
 app.use('/api/challans', auth, challanRoutes);
 
 // --- 4. HEALTH & STATUS ---

@@ -83,6 +83,7 @@ const InvoiceForm = () => {
 
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -218,8 +219,12 @@ const InvoiceForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
     setError('');
     setSuccessMessage('');
+    setSubmitting(true);
+
     try {
       const token = await getToken();
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -242,7 +247,10 @@ const InvoiceForm = () => {
       }, 2000);
     } catch (err) {
       console.error('Error saving invoice:', err);
-      setError(err.response?.data?.msg || 'Error saving invoice');
+      // PRIORITY: Use the message from the server if available
+      const serverMessage = err.response?.data?.msg || err.response?.data?.message;
+      setError(serverMessage || 'Failed to save invoice. Please try again.');
+      setSubmitting(false);
     }
   };
 
@@ -521,8 +529,8 @@ const InvoiceForm = () => {
         <div className="mt-4 border-top pt-4 text-end">
           {error && <div className="alert alert-danger py-2 px-3 small d-inline-block me-3">{error}</div>}
           {successMessage && <div className="alert alert-success py-2 px-3 small d-inline-block me-3">{successMessage}</div>}
-          <button type="submit" className="btn btn-primary btn-lg px-5">
-            <Save size={20} className="me-2" /> Save Invoice
+          <button type="submit" className="btn btn-primary btn-lg px-5" disabled={submitting}>
+            <Save size={20} className="me-2" /> {submitting ? 'Saving...' : 'Save Invoice'}
           </button>
         </div>
       </form>
